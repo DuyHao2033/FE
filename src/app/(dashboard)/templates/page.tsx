@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Plus, MoreVertical, Layout, Search, Trash2, CheckCircle, XCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Plus, MoreVertical, Layout, Search, Trash2, CheckCircle, XCircle, ChevronLeft, ChevronRight, Loader2, Copy } from 'lucide-react';
 import Link from 'next/link';
 import { getFullUrl } from '@/utils/url';
 import { api } from '@/lib/api';
@@ -15,6 +15,7 @@ interface Template {
   orientation: string;
   is_active: boolean;
   background_url?: string;
+  certificate_type_id?: string;
 }
 
 export default function TemplatesPage() {
@@ -28,8 +29,6 @@ export default function TemplatesPage() {
   const [pageSize] = useState(6);
 
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [templateToDelete, setTemplateToDelete] = useState<Template | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Debounce search
@@ -73,22 +72,34 @@ export default function TemplatesPage() {
     fetchTemplates();
   }, [debouncedSearch, currentPage]);
 
-  const handleDeleteClick = (tmpl: Template) => {
-    setTemplateToDelete(tmpl);
-    setIsDeleteModalOpen(true);
-    setActiveMenuId(null);
-  };
-
-  const confirmDelete = async () => {
-    if (!templateToDelete) return;
+  const handleDuplicate = async (tmpl: Template) => {
     try {
       setIsSubmitting(true);
-      await api.delete(`/templates/${templateToDelete.id}`);
-      setIsDeleteModalOpen(false);
+      // 1. Get full data
+      const res = await api.get(`/templates/${tmpl.id}`);
+      const fullTmpl = res.data;
+      
+      // 2. Create new template
+      const createRes = await api.post('/templates', {
+        name: `${fullTmpl.name} (Copy)`,
+        category: fullTmpl.category,
+        page_size: fullTmpl.page_size,
+        orientation: fullTmpl.orientation,
+        certificate_type_id: fullTmpl.certificate_type_id
+      });
+      const newId = createRes.data.id;
+
+      // 3. Update with layout and background url
+      await api.patch(`/templates/${newId}`, {
+        layout_json: fullTmpl.layout_json,
+        background_url: fullTmpl.background_url
+      });
+      
+      setActiveMenuId(null);
       fetchTemplates();
     } catch (error) {
-      console.error("Failed to delete template", error);
-      alert("Failed to delete template");
+      console.error("Failed to duplicate template", error);
+      alert("Failed to duplicate template");
     } finally {
       setIsSubmitting(false);
     }
@@ -141,6 +152,11 @@ export default function TemplatesPage() {
       
       {loading ? (
           <div className="py-20 text-center text-sm text-gray-500">Loading templates...</div>
+      ) : isSubmitting ? (
+          <div className="py-20 text-center text-sm text-gray-500 flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+              <span>Processing request...</span>
+          </div>
       ) : templates.length === 0 ? (
           <div className="py-20 text-center border-2 border-dashed border-gray-200 rounded-xl bg-white">
              <Layout className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -175,9 +191,18 @@ export default function TemplatesPage() {
                         <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-1">{tmpl.name}</h3>
                         <p className="text-sm text-gray-500 mb-4">{tmpl.category || 'General'}</p>
                         
-                        <div className="flex text-xs text-gray-500 gap-4 mb-4">
-                            <span>Format: <span className="font-medium text-gray-700">{tmpl.page_size}</span></span>
-                            <span>Orientation: <span className="font-medium text-gray-700 capitalize">{tmpl.orientation}</span></span>
+                        <div className="flex flex-col text-xs text-gray-400 gap-1 mb-4">
+                            <div className="flex justify-between">
+                                <span>Format: <span className="font-medium text-gray-700">{tmpl.page_size}</span></span>
+                                <span>Orientation: <span className="font-medium text-gray-700 capitalize">{tmpl.orientation}</span></span>
+                            </div>
+                            {tmpl.certificate_type_id && (
+                                <div className="mt-1">
+                                    <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 uppercase tracking-tighter">
+                                        Type ID: {tmpl.certificate_type_id.substring(0, 8)}...
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         
                         <div className="mt-auto pt-4 border-t border-gray-100 flex gap-2">
@@ -220,11 +245,11 @@ export default function TemplatesPage() {
                                                     )}
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDeleteClick(tmpl)}
-                                                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                                    onClick={() => handleDuplicate(tmpl)}
+                                                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                 >
-                                                    <Trash2 size={16} />
-                                                    <span>Delete</span>
+                                                    <Copy size={16} className="text-gray-400" />
+                                                    <span>Duplicate</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -277,36 +302,6 @@ export default function TemplatesPage() {
           </>
       )}
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        title="Delete Template"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600 leading-relaxed">
-            Are you sure you want to delete <span className="font-bold text-gray-900">{templateToDelete?.name}</span>? 
-            This action cannot be undone and will remove all associated certificate mappings.
-          </p>
-          <div className="pt-2 flex gap-3">
-            <button
-              type="button"
-              onClick={() => setIsDeleteModalOpen(false)}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirmDelete}
-              disabled={isSubmitting}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-sm font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              Delete
-            </button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }

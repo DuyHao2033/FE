@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { Layout, ChevronRight, Search, Award, Loader2, ArrowLeft } from 'lucide-react';
+import { Layout, ChevronRight, Search, Award, Loader2, ArrowLeft, FileText } from 'lucide-react';
 import { getFullUrl } from '@/utils/url';
 import VisualBuilder, { BuilderElement, TemplateMetadata } from '@/components/builder/VisualBuilder';
 
@@ -25,6 +25,10 @@ export default function IssueSinglePage() {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [decisions, setDecisions] = useState<any[]>([]);
+  const [selectedDecisionId, setSelectedDecisionId] = useState<string>('');
+  const [registryNumber, setRegistryNumber] = useState<string>('');
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -41,7 +45,17 @@ export default function IssueSinglePage() {
         setLoading(false);
       }
     };
+    const fetchDecisions = async () => {
+      try {
+        const res = await api.get('/certificate-decisions');
+        setDecisions(Array.isArray(res.data) ? res.data : (res.data.items || []));
+      } catch (error) {
+        console.error("Failed to fetch decisions", error);
+      }
+    };
+
     fetchTemplates();
+    fetchDecisions();
   }, []);
 
   const handleTemplateSelect = (tmpl: Template) => {
@@ -57,8 +71,20 @@ export default function IssueSinglePage() {
       
       const variableData: Record<string, string> = {};
       layout.elements.forEach(el => {
-        if (el.type === 'text' && el.is_variable) {
-          variableData[el.key] = el.content || "";
+        if (el.type === 'text') {
+          if (el.is_variable) {
+            variableData[el.key] = el.content || "";
+          } else if (el.content?.includes('{{')) {
+            // Extract placeholders from the content and use the runtime value from runtime_values map
+            const matches = el.content.match(/\{\{([^{}]+)\}\}/g);
+            matches?.forEach(m => {
+              const key = m.replace(/[{}]/g, '').trim();
+              // If we have a stored value for this placeholder in this element, use it
+              if (el.runtime_values?.[key]) {
+                variableData[key] = el.runtime_values[key];
+              }
+            });
+          }
         }
       });
 
@@ -98,6 +124,8 @@ export default function IssueSinglePage() {
         recipient_email: emailKey ? variableData[emailKey] : undefined,
         recipient_id: idKey ? variableData[idKey] : undefined,
         title: title,
+        decision_id: selectedDecisionId || undefined,
+        registry_number: registryNumber || undefined,
         custom_data: variableData // Include everything in custom_data as well for the PDF engine
       });
 
@@ -118,7 +146,7 @@ export default function IssueSinglePage() {
   return (
     <div className="flex flex-col gap-6 h-full">
       {/* Header & Stepper */}
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex-shrink-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <button 
@@ -217,8 +245,9 @@ export default function IssueSinglePage() {
         </div>
       ) : (
         /* Edit Data Step with VisualBuilder */
-        <div className="flex-1 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
-          {selectedTemplate && (
+        <div className="flex-1 flex flex-col gap-6 overflow-hidden">
+          <div className="flex-1 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl relative">
+            {selectedTemplate && (
               <VisualBuilder 
                   initialLayout={selectedTemplate.layout_json}
                   initialMetadata={{
@@ -231,10 +260,18 @@ export default function IssueSinglePage() {
                   onSave={handleIssue}
                   isNew={false}
                   mode="issue"
+                  extraIssueData={{
+                    decisionId: selectedDecisionId,
+                    setDecisionId: setSelectedDecisionId,
+                    registryNumber: registryNumber,
+                    setRegistryNumber: setRegistryNumber,
+                    decisions: decisions
+                  }}
               />
           )}
         </div>
-      )}
+      </div>
+    )}
 
       {isSubmitting && (
           <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-[2px] flex items-center justify-center">

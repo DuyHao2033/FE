@@ -65,7 +65,7 @@ export default function CreateTemplatePage() {
 
   return (
     <div className="flex flex-col h-full bg-gray-50 -m-8 p-8 relative">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <div className="flex items-center gap-4">
             <button 
               onClick={() => router.push('/templates')} 
@@ -89,7 +89,7 @@ export default function CreateTemplatePage() {
         </div>
       )}
 
-      <div className="flex-1 rounded-xl shadow-sm border border-gray-200 bg-white relative">
+      <div className="flex-1 rounded-xl shadow-sm border border-gray-200 bg-white relative flex flex-col overflow-hidden">
         <VisualBuilder 
             isNew={true}
             onSave={handleCreate} 

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
-import { Award, Plus, FileText, Download, CheckCircle, XCircle, Search } from 'lucide-react';
+import { Award, Plus, FileText, Download, CheckCircle, XCircle, Search, Layers } from 'lucide-react';
+import { Modal } from '@/components/ui/Modal';
 
 interface Certificate {
     id: string;
@@ -13,12 +14,16 @@ interface Certificate {
     status: string;
     issued_at: string;
     pdf_url: string | null;
+    registry_number?: string;
 }
 
 export default function CertificatesPage() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [revokeTarget, setRevokeTarget] = useState<Certificate | null>(null);
+  const [revokeReason, setRevokeReason] = useState("");
+  const [isRevoking, setIsRevoking] = useState(false);
 
   useEffect(() => {
     const fetchCerts = async () => {
@@ -39,6 +44,30 @@ export default function CertificatesPage() {
      c.cert_code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleRevoke = async () => {
+    if (!revokeTarget) return;
+    if (!revokeReason.trim()) {
+      alert("Please provide a revoke reason.");
+      return;
+    }
+
+    try {
+      setIsRevoking(true);
+      await api.post(`/certificates/${revokeTarget.id}/revoke`, {
+        reason: revokeReason.trim()
+      });
+      setRevokeTarget(null);
+      setRevokeReason("");
+      const res = await api.get('/certificates');
+      setCertificates(res.data);
+    } catch (error) {
+      console.error("Failed to revoke certificate", error);
+      alert("Failed to revoke certificate. Please check the console.");
+    } finally {
+      setIsRevoking(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="sm:flex sm:items-center sm:justify-between">
@@ -48,14 +77,21 @@ export default function CertificatesPage() {
             View, issue, and manage digital certificates.
           </p>
         </div>
-        <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex gap-3">
-          <button
-            type="button"
+        <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex gap-3 flex-wrap">
+          <Link
+            href="/certificates/batches"
+            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-center text-sm font-semibold text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 transition-colors"
+          >
+             <Layers size={18} />
+             Manage Batches
+          </Link>
+          <Link
+            href="/certificates/batch-issue"
             className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-center text-sm font-semibold text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 transition-colors"
           >
              <FileText size={18} />
-             Batch Issue (CSV)
-          </button>
+             Batch Issue (Excel)
+          </Link>
           <Link
             href="/certificates/issue"
             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors"
@@ -86,7 +122,7 @@ export default function CertificatesPage() {
             <thead className="bg-gray-50">
                <tr>
                   <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Recipient & Title</th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Code</th>
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Code / Registry</th>
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Issued On</th>
                   <th scope="col" className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Actions</th>
@@ -107,7 +143,10 @@ export default function CertificatesPage() {
                               <div className="font-medium text-gray-900">{cert.recipient_name}</div>
                               <div className="text-sm text-gray-500">{cert.title}</div>
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm font-mono text-gray-600">{cert.cert_code}</td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm font-mono text-gray-600">
+                              <div className="font-bold">{cert.cert_code}</div>
+                              {cert.registry_number && <div className="text-[10px] text-indigo-500 uppercase tracking-tighter">Reg: {cert.registry_number}</div>}
+                          </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm">
                               {cert.status === 'valid' || cert.status === 'active' ? (
                                   <span className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20">
@@ -136,7 +175,13 @@ export default function CertificatesPage() {
                                  <Download size={16} /> PDF
                              </a>
                              {(cert.status === 'valid' || cert.status === 'active') && (
-                                 <button className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md transition-colors">
+                                 <button
+                                   onClick={() => {
+                                     setRevokeTarget(cert);
+                                     setRevokeReason("");
+                                   }}
+                                   className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md transition-colors"
+                                 >
                                      Revoke
                                  </button>
                              )}
@@ -147,6 +192,55 @@ export default function CertificatesPage() {
             </tbody>
          </table>
       </div>
+
+      <Modal
+        isOpen={!!revokeTarget}
+        onClose={() => {
+          if (isRevoking) return;
+          setRevokeTarget(null);
+          setRevokeReason("");
+        }}
+        title="Revoke certificate"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Revoke <span className="font-semibold text-gray-900">{revokeTarget?.cert_code}</span> for{' '}
+            <span className="font-semibold text-gray-900">{revokeTarget?.recipient_name}</span>.
+          </p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Reason</label>
+            <textarea
+              value={revokeReason}
+              onChange={(e) => setRevokeReason(e.target.value)}
+              rows={4}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+              placeholder="Enter revoke reason..."
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              disabled={isRevoking}
+              onClick={() => {
+                if (isRevoking) return;
+                setRevokeTarget(null);
+                setRevokeReason("");
+              }}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isRevoking}
+              onClick={handleRevoke}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {isRevoking ? "Revoking..." : "Revoke"}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -64,7 +64,8 @@ export default function TemplateBuilderPage() {
         name: metadata.name,
         category: metadata.category,
         page_size: metadata.page_size,
-        orientation: metadata.orientation
+        orientation: metadata.orientation,
+        certificate_type_id: metadata.certificate_type_id || null
       });
       alert("Template saved successfully!");
       router.push('/templates');
@@ -89,7 +90,7 @@ export default function TemplateBuilderPage() {
           </div>
         </div>
       )}
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-2 flex-shrink-0">
         <div className="flex items-center gap-4">
             <button onClick={() => router.push('/templates')} className="text-gray-500 hover:text-gray-900 transition-colors p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
                 <ArrowLeft size={20} />
@@ -101,13 +102,14 @@ export default function TemplateBuilderPage() {
         </div>
       </div>
       
-      <div className="flex-1 -mx-8">
+      <div className="flex-1 -mx-8 flex flex-col overflow-hidden">
         <VisualBuilder 
             initialMetadata={{
               name: template.name || '',
               category: template.category || 'General',
               page_size: template.page_size || 'A4',
-              orientation: template.orientation || 'landscape'
+              orientation: template.orientation || 'landscape',
+              certificate_type_id: template.certificate_type_id || ''
             }}
             initialLayout={template.layout_json?.elements ? template.layout_json : { elements: [] }} 
             backgroundUrl={template.background_url}

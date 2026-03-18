@@ -3,7 +3,7 @@
 import { useAuthStore } from '@/lib/store';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Building, FileText, Award, LogOut, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Users, Building, FileText, Award, LogOut, Loader2, Layers, CircleHelp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -13,13 +13,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, logout, isLoading, isAuthenticated } = useAuthStore();
-  const [mounted, setMounted] = useState(false);
+  const [mounted] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
@@ -38,10 +34,14 @@ export default function DashboardLayout({
   const navItems = [
     { href: '/', label: 'Overview', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'org_admin', 'issuer'] },
     { href: '/certificates', label: 'Certificates', icon: <Award size={20} />, roles: ['super_admin', 'org_admin', 'issuer'] },
+    { href: '/certificates/batches', label: 'Batches', icon: <Layers size={20} />, roles: ['super_admin', 'org_admin', 'issuer'] },
+    { href: '/certificate-decisions', label: 'Decisions', icon: <FileText size={20} />, roles: ['super_admin', 'org_admin', 'issuer'] },
     { href: '/templates', label: 'Templates', icon: <FileText size={20} />, roles: ['super_admin', 'org_admin'] },
+    { href: '/certificate-types', label: 'Cert Types', icon: <Layers size={20} />, roles: ['super_admin', 'org_admin'] },
     { href: '/users', label: 'Users', icon: <Users size={20} />, roles: ['super_admin', 'org_admin'] },
     { href: '/organizations', label: 'Organizations', icon: <Building size={20} />, roles: ['super_admin'] },
     { href: '/fonts', label: 'Fonts', icon: <FileText size={20} />, roles: ['super_admin'] },
+    { href: '/user-guide', label: 'Hướng dẫn', icon: <CircleHelp size={20} />, roles: ['super_admin', 'org_admin', 'issuer'] },
   ];
 
   const handleLogout = () => {
@@ -99,10 +99,8 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Mobile Header (optional implementation)  ... */}
-        
         <div className="flex-1 overflow-y-auto bg-gray-50/50 p-6 md:p-8">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto h-full flex flex-col">
              {children}
           </div>
         </div>
