@@ -5,14 +5,16 @@ import { api } from '@/lib/api';
 import VisualBuilder, { TemplateMetadata, BuilderElement } from '@/components/builder/VisualBuilder';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function CreateTemplatePage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [isSaving, setIsSaving] = useState(false);
 
   const handleCreate = async (layout: { elements: BuilderElement[] }, metadata: TemplateMetadata, bgFile: File | null) => {
     if (!metadata.name) {
-      alert("Please provide a template name in Settings tab.");
+      alert(t('templates.nameRequired'));
       return;
     }
 
@@ -57,7 +59,7 @@ export default function CreateTemplatePage() {
       router.push('/templates');
     } catch (error) {
       console.error("Failed to create template:", error);
-      alert("Failed to create template. Please check the console.");
+      alert(t('common.error'));
     } finally {
       setIsSaving(false);
     }
@@ -74,8 +76,8 @@ export default function CreateTemplatePage() {
                 <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900">Create New Template</h1>
-              <p className="text-sm text-gray-500">Set up template details, upload background, and design layout.</p>
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900">{t('templates.create')}</h1>
+              <p className="text-sm text-gray-500">{t('templates.createSubtitle')}</p>
             </div>
         </div>
       </div>
@@ -84,7 +86,7 @@ export default function CreateTemplatePage() {
         <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-4">
             <Loader2 className="animate-spin text-indigo-600 h-8 w-8" />
-            <p className="font-medium text-gray-700">Creating your template...</p>
+            <p className="font-medium text-gray-700">{t('templates.creating')}</p>
           </div>
         </div>
       )}

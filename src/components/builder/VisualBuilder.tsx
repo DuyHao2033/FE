@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { getFullUrl } from '@/utils/url';
 import { api } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 
 export type ElementType = "text" | "qr" | "image";
 
@@ -72,17 +73,30 @@ function rgbToHex(r: number, g: number, b: number) {
   }).join("");
 }
 
-const VARIABLE_MAP: Record<string, { label: string, color: string, icon?: string }> = {
-  "{{recipient_name}}": { label: "Họ tên người nhận", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  "{{recipient_email}}": { label: "Email", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  "{{recipient_id}}": { label: "Mã định danh (ID)", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  "{{title}}": { label: "Tiêu đề chứng chỉ", color: "bg-purple-100 text-purple-700 border-purple-200" },
-  "{{issued_at}}": { label: "Ngày cấp", color: "bg-purple-100 text-purple-700 border-purple-200" },
-  "{{expires_at}}": { label: "Ngày hết hạn", color: "bg-purple-100 text-purple-700 border-purple-200" },
-  "{{decision.number}}": { label: "Số quyết định", color: "bg-amber-100 text-amber-700 border-amber-200" },
-  "{{decision.date}}": { label: "Ngày quyết định", color: "bg-amber-100 text-amber-700 border-amber-200" },
-  "{{certificate.serial}}": { label: "Mã số chứng chỉ", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  "{{certificate.registry_number}}": { label: "Số vào sổ", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+const VARIABLE_MAP_KEYS: Record<string, string> = {
+  "{{recipient_name}}": "builder.variables.recipient_name",
+  "{{recipient_email}}": "builder.variables.recipient_email",
+  "{{recipient_id}}": "builder.variables.recipient_id",
+  "{{title}}": "builder.variables.title",
+  "{{issued_at}}": "builder.variables.issued_at",
+  "{{expires_at}}": "builder.variables.expires_at",
+  "{{decision.number}}": "builder.variables.decision_number",
+  "{{decision.date}}": "builder.variables.decision_date",
+  "{{certificate.serial}}": "builder.variables.cert_serial",
+  "{{certificate.registry_number}}": "builder.variables.cert_registry",
+};
+
+const VARIABLE_MAP_STYLES: Record<string, string> = {
+  "{{recipient_name}}": "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+  "{{recipient_email}}": "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+  "{{recipient_id}}": "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+  "{{title}}": "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800",
+  "{{issued_at}}": "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800",
+  "{{expires_at}}": "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800",
+  "{{decision.number}}": "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+  "{{decision.date}}": "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+  "{{certificate.serial}}": "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+  "{{certificate.registry_number}}": "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
 };
 
 function hexToRgb(hex: string) {
@@ -95,13 +109,14 @@ function hexToRgb(hex: string) {
 }
 
 export default function VisualBuilder({ initialLayout, initialMetadata, backgroundUrl, onSave, isNew, mode = "builder", extraIssueData }: VisualBuilderProps) {
+  const { t } = useTranslation();
   const [elements, setElements] = useState<BuilderElement[]>(initialLayout?.elements || []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"settings" | "elements">(isNew ? "settings" : "elements");
 
   const [metadata, setMetadata] = useState<TemplateMetadata>(initialMetadata || {
     name: "",
-    category: "General",
+    category: t('common.general'),
     page_size: "A4",
     orientation: "landscape"
   });
@@ -206,16 +221,18 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
     return parts.map((part, i) => {
       if (part.startsWith('{{') && part.endsWith('}}')) {
         const key = part.replace(/[{}]/g, '');
-        const mapped = VARIABLE_MAP[part] || { label: key, color: "bg-gray-100 text-gray-700 border-gray-200" };
+        const transKey = VARIABLE_MAP_KEYS[part];
+        const label = transKey ? t(transKey) : key;
+        const colorClass = VARIABLE_MAP_STYLES[part] || "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700";
 
         // In issue mode, if we have a real-time value, show it in a special style
-        const displayValue = (mode === 'issue' && el.runtime_values?.[key]) ? el.runtime_values[key] : mapped.label;
+        const displayValue = (mode === 'issue' && el.runtime_values?.[key]) ? el.runtime_values[key] : label;
         const isFilled = mode === 'issue' && !!el.runtime_values?.[key];
 
         return (
           <span
             key={i}
-            className={`inline-block px-1.5 py-0.5 mx-0.5 rounded text-[0.85em] font-bold border border-current align-baseline whitespace-nowrap ${isFilled ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'opacity-90'}`}
+            className={`inline-block px-1.5 py-0.5 mx-0.5 rounded text-[0.85em] font-bold border border-current align-baseline whitespace-nowrap ${isFilled ? 'bg-primary/10 text-primary border-primary/20' : 'opacity-90'} ${colorClass}`}
             style={{
               backgroundColor: isFilled ? undefined : 'rgba(255,255,255,0.8)',
               fontSize: '0.75em',
@@ -259,7 +276,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
       font_size: 24,
       color: [0, 0, 0],
       align: "left",
-      content: "Nhấn đúp để chỉnh sửa văn bản"
+      content: t('builder.placeholders.newText')
     };
     setElements([...elements, newEl]);
     setSelectedId(newEl.id);
@@ -310,24 +327,24 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
   };
 
   return (
-    <div className="relative flex flex-1 min-h-0 bg-gray-50 border border-gray-200 mt-1 rounded-xl overflow-hidden shadow-sm">
+    <div className="relative flex flex-1 min-h-0 bg-muted/30 border border-border mt-1 rounded-2xl overflow-hidden shadow-sm">
       {/* Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col z-10 text-gray-900">
+      <div className="w-80 bg-card border-r border-border flex flex-col z-10 text-foreground">
 
         {/* Tabs */}
         {mode === "builder" && (
-          <div className="flex border-b border-gray-200">
+          <div className="flex border-b border-border">
             <button
-              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium ${activeTab === 'settings' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold transition-all ${activeTab === 'settings' ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'}`}
               onClick={() => setActiveTab('settings')}
             >
-              <Settings size={16} /> Settings
+              <Settings size={16} /> {t('common.settings')}
             </button>
             <button
-              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium ${activeTab === 'elements' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold transition-all ${activeTab === 'elements' ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'}`}
               onClick={() => setActiveTab('elements')}
             >
-              <Layers size={16} /> Elements
+              <Layers size={16} /> {t('common.elements')}
             </button>
           </div>
         )}
@@ -336,39 +353,39 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
           {mode === "issue" && (
             <div className="space-y-6">
               <div>
-                <h3 className="font-bold text-gray-900 border-b pb-2 flex items-center gap-2 mb-4">
-                  <FileText className="text-indigo-600" size={18} />
-                  Thông tin cấp phát
+                <h3 className="font-bold text-foreground border-b border-border pb-2 flex items-center gap-2 mb-4">
+                  <FileText className="text-primary" size={18} />
+                  {t('builder.issueInfo')}
                 </h3>
 
                 <div className="space-y-4">
                   {extraIssueData && (
                     <>
-                      <div className="bg-gray-50/50 p-3 rounded-xl border border-gray-100 shadow-sm">
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Quyết định khen thưởng</label>
+                      <div className="bg-accent/30 p-3 rounded-xl border border-border/50 shadow-sm">
+                        <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.decisionLink')}</label>
                         <select
                           value={extraIssueData.decisionId}
                           onChange={(e) => extraIssueData.setDecisionId(e.target.value)}
-                          className="w-full text-sm border-gray-200 rounded-lg p-2 border bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all"
+                          className="w-full text-sm border-border rounded-lg p-2 border bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                         >
-                          <option value="">Không liên kết quyết định</option>
+                          <option value="">{t('builder.noDecision')}</option>
                           {extraIssueData.decisions.map(d => (
                             <option key={d.id} value={d.id}>{d.decision_number} ({new Date(d.decision_date).toLocaleDateString()})</option>
                           ))}
                         </select>
                       </div>
 
-                      <div className="bg-gray-50/50 p-3 rounded-xl border border-gray-100 shadow-sm">
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Số vào sổ</label>
+                      <div className="bg-accent/30 p-3 rounded-xl border border-border/50 shadow-sm">
+                        <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.registryNum')}</label>
                         <input
                           type="text"
                           value={extraIssueData.registryNumber}
                           onChange={(e) => extraIssueData.setRegistryNumber(e.target.value)}
                           placeholder="v.d. 001/2026"
-                          className="w-full text-sm border-gray-200 rounded-lg p-2 border focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all"
+                          className="w-full text-sm border-border rounded-lg p-2 border bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                         />
                       </div>
-                      <div className="h-px bg-gray-100 my-2" />
+                      <div className="h-px bg-border/50 my-2" />
                     </>
                   )}
 
@@ -389,7 +406,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
 
                       coreInputs.push({
                         key: k,
-                        label: VARIABLE_MAP[`{{${k}}}`]?.label || k,
+                        label: t(VARIABLE_MAP_KEYS[`{{${k}}}`] || k),
                         existsInTemplate: !!foundEl,
                         elId: foundEl?.id
                       });
@@ -402,7 +419,8 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                       if (el.is_variable) {
                         if (!coreKeys.includes(el.key)) {
                           if (!otherInputs.find(i => i.key === el.key)) {
-                            otherInputs.push({ key: el.key, label: VARIABLE_MAP[`{{${el.key}}}`]?.label || el.key, elId: el.id });
+                            const transKey = VARIABLE_MAP_KEYS[`{{${el.key}}}`];
+                            otherInputs.push({ key: el.key, label: transKey ? t(transKey) : el.key, elId: el.id });
                           }
                         }
                       } else if (el.content?.includes('{{')) {
@@ -413,7 +431,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                           if (key.startsWith('decision.') || key === 'certificate.registry_number' || key === 'certificate.serial') return;
 
                           if (!otherInputs.find(i => i.key === key)) {
-                            otherInputs.push({ key, label: VARIABLE_MAP[`{{${key}}}`]?.label || key });
+                            otherInputs.push({ key, label: t(VARIABLE_MAP_KEYS[`{{${key}}}`] || key) });
                           }
                         });
                       }
@@ -428,17 +446,17 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                         || (elements[0]?.runtime_values?.[input.key] || '');
 
                       return (
-                        <div key={input.key} className="bg-gray-50/50 p-3 rounded-xl border border-gray-100 shadow-sm transition-all hover:bg-white hover:border-indigo-100">
-                          <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest flex items-center gap-1.5">
-                            <span className={`w-1.5 h-1.5 rounded-full ${isCore ? 'bg-indigo-400' : 'bg-emerald-400'}`}></span>
+                        <div key={input.key} className="bg-accent/30 p-3 rounded-xl border border-border/50 shadow-sm transition-all hover:bg-card hover:border-primary/50 group/input">
+                          <label className="block text-[10px] font-bold text-muted-foreground mb-1.5 uppercase tracking-widest flex items-center gap-1.5">
+                            <span className={`w-1.5 h-1.5 rounded-full ${isCore ? 'bg-primary' : 'bg-emerald-500'}`}></span>
                             {input.label}
-                            {isCore && <span className="text-[8px] bg-indigo-100 text-indigo-600 px-1 rounded ml-auto">YÊU CẦU</span>}
-                            {!isCore && input.elId && <span className="text-[8px] bg-emerald-100 text-emerald-600 px-1 rounded ml-auto">THIẾT KẾ</span>}
+                            {isCore && <span className="text-[8px] bg-primary/10 text-primary px-1.5 rounded ml-auto font-black">{t('common.required')}</span>}
+                            {!isCore && input.elId && <span className="text-[8px] bg-emerald-500/10 text-emerald-600 px-1.5 rounded ml-auto font-black">{t('common.inDesign')}</span>}
                           </label>
                           <input
                             type="text"
-                            className="w-full border-gray-200 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border text-sm bg-white"
-                            placeholder={`Nhập ${input.label.toLowerCase()}...`}
+                            className="w-full border-border rounded-lg shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 px-3 py-2 border text-sm bg-card outline-none transition-all"
+                            placeholder={`${t('common.add')} ${input.label.toLowerCase()}...`}
                             value={value}
                             onChange={(e) => {
                               const newVal = e.target.value;
@@ -478,13 +496,13 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                     return (
                       <div className="space-y-6">
                         <div className="space-y-4">
-                          <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Thông tin cơ bản</h4>
+                          <h4 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.2em] px-1">{t('builder.basicInfo')}</h4>
                           {coreInputs.map(i => renderInput(i, true))}
                         </div>
 
                         {otherInputs.length > 0 && (
-                          <div className="space-y-4 pt-4 border-t border-dashed border-gray-200">
-                            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Trường bổ sung (Thiết kế)</h4>
+                          <div className="space-y-4 pt-4 border-t border-dashed border-border">
+                            <h4 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.2em] px-1">{t('builder.designFields')}</h4>
                             {otherInputs.map(i => renderInput(i, false))}
                           </div>
                         )}
@@ -493,9 +511,9 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                   })()}
                 </div>
 
-                <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                  <p className="text-[11px] text-indigo-700 leading-relaxed">
-                    <span className="font-bold">Lưu ý:</span> Các trường <strong>Yêu cầu</strong> sẽ được lưu vào hồ sơ ngay cả khi không hiển thị trên mẫu in.
+                <div className="mt-8 p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                  <p className="text-[11px] text-primary/80 leading-relaxed font-medium">
+                    <span className="font-bold">{t('builder.note')}:</span> {t('builder.noteText')}
                   </p>
                 </div>
               </div>
@@ -505,82 +523,82 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
           {mode === "builder" && activeTab === 'settings' && (
             <div className="p-5 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Template Name</label>
+                <label className="block text-sm font-bold text-foreground mb-1.5">{t('common.templateName')}</label>
                 <input
                   type="text"
                   value={metadata.name}
                   onChange={(e) => setMetadata({ ...metadata, name: e.target.value })}
-                  className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
-                  placeholder="e.g. Course Completion 2024"
+                  className="w-full text-sm border-border rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary p-2 border bg-card outline-none"
+                  placeholder={t('builder.placeholders.templateName')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Certificate Type</label>
+                <label className="block text-sm font-bold text-foreground mb-1.5">{t('sidebar.certTypes')}</label>
                 <select
                   value={metadata.certificate_type_id}
                   onChange={(e) => setMetadata({ ...metadata, certificate_type_id: e.target.value })}
-                  className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border bg-white"
+                  className="w-full text-sm border-border rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary p-2 border bg-card outline-none"
                 >
-                  <option value="">Select a type...</option>
+                  <option value="">{t('builder.placeholders.selectType')}</option>
                   {availableCertTypes.map(t => (
-                    <option key={t.id} value={t.id}>{t.name} ({t.code})</option>
+                    <option key={t.id} value={t.id} className="bg-card">{t.name} ({t.code})</option>
                   ))}
                 </select>
-                <p className="mt-1 text-[10px] text-gray-400 uppercase font-bold tracking-tight">
-                  Linking a type provides field suggestions
+                <p className="mt-1 text-[10px] text-muted-foreground uppercase font-bold tracking-tight opacity-60">
+                  {t('builder.typeSelectionHint')}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <label className="block text-sm font-bold text-foreground mb-1.5">{t('common.category')}</label>
                 <input
                   type="text"
                   value={metadata.category}
                   onChange={(e) => setMetadata({ ...metadata, category: e.target.value })}
-                  className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
-                  placeholder="e.g. Workshop"
+                  className="w-full text-sm border-border rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary p-2 border bg-card outline-none"
+                  placeholder={t('builder.category')}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Page Size</label>
+                  <label className="block text-sm font-bold text-foreground mb-1.5">{t('common.pageSize')}</label>
                   <select
                     value={metadata.page_size}
                     onChange={(e) => setMetadata({ ...metadata, page_size: e.target.value })}
-                    className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border bg-white"
+                    className="w-full text-sm border-border rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary p-2 border bg-card outline-none"
                   >
                     <option value="A4">A4</option>
                     <option value="Letter">Letter</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Orientation</label>
+                  <label className="block text-sm font-bold text-foreground mb-1.5">{t('common.orientation')}</label>
                   <select
                     value={metadata.orientation}
                     onChange={(e) => setMetadata({ ...metadata, orientation: e.target.value })}
-                    className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border bg-white"
+                    className="w-full text-sm border-border rounded-lg shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary p-2 border bg-card outline-none"
                   >
-                    <option value="landscape">Landscape</option>
-                    <option value="portrait">Portrait</option>
+                    <option value="landscape">{t('common.landscape')}</option>
+                    <option value="portrait">{t('common.portrait')}</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Background Image</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer relative">
+                <label className="block text-sm font-bold text-foreground mb-2">{t('builder.background')}</label>
+                <div className="border-2 border-dashed border-border rounded-2xl p-6 text-center hover:bg-accent/50 transition-all cursor-pointer relative group/bg overflow-hidden">
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleBgUpload}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   />
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <ImageIcon className="text-gray-400" size={24} />
-                    <span className="text-sm text-gray-600 font-medium">Click to upload background</span>
-                    <span className="text-xs text-gray-400">PNG, JPG up to 10MB</span>
+                  <div className="flex flex-col items-center justify-center gap-2 group-hover:scale-110 transition-transform">
+                    <ImageIcon className="text-muted-foreground group-hover:text-primary transition-colors" size={32} />
+                    <span className="text-sm text-foreground font-bold">{t('builder.placeholders.uploadBg')}</span>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{t('builder.uploadFormatHint')}</span>
                   </div>
                 </div>
               </div>
@@ -589,63 +607,63 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
 
           {mode === "builder" && activeTab === 'elements' && (
             <>
-              <div className="p-4 space-y-2 border-b border-gray-100">
+              <div className="p-4 space-y-3 border-b border-border">
                 <button
                   onClick={handleAddText}
-                  className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
+                  className="w-full flex items-center justify-center gap-2.5 p-3 rounded-xl border border-border bg-card hover:bg-primary/5 hover:text-primary hover:border-primary/50 transition-all font-bold text-sm shadow-sm"
                 >
-                  <Type size={18} /> Add Text Field
+                  <Type size={18} /> {t('builder.addText')}
                 </button>
                 <button
                   onClick={handleAddQR}
-                  className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
+                  className="w-full flex items-center justify-center gap-2.5 p-3 rounded-xl border border-border bg-card hover:bg-primary/5 hover:text-primary hover:border-primary/50 transition-all font-bold text-sm shadow-sm"
                 >
-                  <QrCode size={18} /> Add QR Code
+                  <QrCode size={18} /> {t('builder.addQR')}
                 </button>
                 <div className="relative">
                   <input
                     type="file"
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     accept="image/*"
                     onChange={(e) => {
                       if (e.target.files?.[0]) handleAddImage(e.target.files[0]);
                     }}
                   />
                   <button
-                    className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
+                    className="w-full flex items-center justify-center gap-2.5 p-3 rounded-xl border border-border bg-card hover:bg-primary/5 hover:text-primary hover:border-primary/50 transition-all font-bold text-sm shadow-sm"
                   >
-                    <ImageIcon size={18} /> Add Image
+                    <ImageIcon size={18} /> {t('builder.addImage')}
                   </button>
                 </div>
               </div>
 
-              <div className="p-4 bg-gray-50/50 min-h-full">
-                <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <Settings size={18} className="text-gray-500" /> Properties
+              <div className="p-4 bg-muted/30 min-h-full">
+                <h3 className="font-bold text-foreground mb-4 flex items-center gap-2 uppercase text-[10px] tracking-widest opacity-60">
+                  <Settings size={14} className="text-primary" /> {t('builder.propertiesLabel')}
                 </h3>
                 {activeElement ? (
                   <>
                     {/* Improved Field Suggestions */}
                     {(metadata.certificate_type_id || true) && (
                       <div className="mt-1 space-y-3">
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Thư viện Thẻ thông minh</label>
+                        <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t('builder.smartTags')}</label>
 
                         {(() => {
                           const certType = availableCertTypes.find(t => t.id === metadata.certificate_type_id);
 
                           const categories = [
                             {
-                              title: "Người nhận",
+                              title: t('builder.categories.recipient'),
                               fields: ["{{recipient_name}}", "{{recipient_email}}", "{{recipient_id}}"],
                               icon: <Plus size={10} className="text-blue-500" />
                             },
                             {
-                              title: "Chứng chỉ",
+                              title: t('builder.categories.certificate'),
                               fields: ["{{title}}", "{{issued_at}}", "{{expires_at}}", "{{certificate.serial}}", "{{certificate.registry_number}}"],
                               icon: <Plus size={10} className="text-purple-500" />
                             },
                             {
-                              title: "Quyết định",
+                              title: t('builder.categories.decision'),
                               fields: ["{{decision.number}}", "{{decision.date}}"],
                               icon: <Plus size={10} className="text-amber-500" />
                             }
@@ -654,7 +672,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                           // Add custom fields
                           if (certType?.field_schema?.custom_fields?.length) {
                             categories.push({
-                              title: "Trường mở rộng",
+                              title: t('builder.categories.custom'),
                               fields: certType.field_schema.custom_fields.map((f: string) => `{{${f}}}`),
                               icon: <Plus size={10} className="text-emerald-500" />
                             });
@@ -662,10 +680,12 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
 
                           return categories.map(cat => (
                             <div key={cat.title} className="space-y-1.5">
-                              <span className="text-[9px] font-semibold text-gray-400 block px-1">{cat.title}</span>
+                              <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wider block px-1">{cat.title}</span>
                               <div className="flex flex-wrap gap-1.5">
                                 {cat.fields.map(f => {
-                                  const mapped = VARIABLE_MAP[f] || { label: f.replace(/[{}]/g, ''), color: "bg-gray-100 text-gray-700 border-gray-200" };
+                                  const transKey = VARIABLE_MAP_KEYS[f];
+                                  const label = transKey ? t(transKey) : f.replace(/[{}]/g, '');
+                                  const colorClass = VARIABLE_MAP_STYLES[f] || "bg-accent text-foreground border-border";
                                   return (
                                     <button
                                       key={f}
@@ -674,10 +694,10 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                                         const currentContent = activeElement?.content || "";
                                         handleUpdateActive({ content: currentContent + (currentContent ? " " : "") + f });
                                       }}
-                                      className={`group px-2 py-1 rounded-md text-[10px] font-medium border transition-all flex items-center gap-1.5 hover:shadow-sm hover:-translate-y-0.5 ${mapped.color}`}
+                                      className={`group px-2 py-1.5 rounded-lg text-[10px] font-bold border transform active:scale-95 transition-all flex items-center gap-1.5 hover:shadow-md hover:-translate-y-0.5 ${colorClass}`}
                                     >
                                       {cat.icon}
-                                      {mapped.label}
+                                      {label}
                                     </button>
                                   );
                                 })}
@@ -686,9 +706,9 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                           ));
                         })()}
 
-                        <div className="bg-blue-50/50 p-2 rounded-lg border border-blue-100 mt-2">
-                          <p className="text-[9px] text-blue-600 leading-relaxed font-medium">
-                            💡 Click để chèn các thẻ này vào vùng soạn thảo bên dưới.
+                        <div className="bg-primary/5 p-3 rounded-xl border border-primary/10 mt-2">
+                          <p className="text-[10px] text-primary leading-relaxed font-bold italic">
+                            💡 {t('builder.smartTagHint')}
                           </p>
                         </div>
                       </div>
@@ -697,28 +717,28 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                     {activeElement?.type === "text" && (
                       <div className="space-y-4 pt-4 border-t border-gray-100 mt-4">
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 uppercase tracking-wider mb-1">
-                            Nội dung văn bản / Mẫu (Template)
+                          <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">
+                            {t('builder.textContent')}
                           </label>
                           <textarea
                             value={activeElement.content || ""}
                             onChange={(e) => handleUpdateActive({ content: e.target.value })}
-                            className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border text-gray-900"
-                            placeholder="Nhập nội dung kèm {{placeholder}}..."
+                            className="w-full text-sm border-border rounded-xl shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary p-3 border bg-card text-foreground outline-none transition-all"
+                            placeholder={t('builder.placeholders.enterContent')}
                             rows={3}
                           />
-                          <p className="text-[10px] text-gray-400 mt-1">
-                            Sử dụng <code>\n</code> để xuống dòng.
+                          <p className="text-[10px] text-muted-foreground mt-2 font-medium italic">
+                            {t('builder.newlineHint')} <code>\n</code>
                           </p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 uppercase tracking-wider mb-1">Font</label>
+                            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.font')}</label>
                             <select
                               value={activeElement.font}
                               onChange={(e) => handleUpdateActive({ font: e.target.value })}
-                              className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-1.5 border bg-white text-gray-900"
+                              className="w-full text-sm border-border rounded-xl shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary p-2 border bg-card text-foreground outline-none transition-all"
                             >
                               {availableFonts.map(f => (
                                 <option key={f} value={f}>{f}</option>
@@ -726,44 +746,44 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 uppercase tracking-wider mb-1">Size</label>
+                            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.fontSize')}</label>
                             <input
                               type="number"
                               value={activeElement.font_size || 24}
                               onChange={(e) => handleUpdateActive({ font_size: parseInt(e.target.value) })}
-                              className="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-1.5 border text-gray-900"
+                              className="w-full text-sm border-border rounded-xl shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary p-2 border bg-card text-foreground outline-none transition-all"
                             />
                           </div>
                         </div>
 
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center border border-gray-200 rounded-lg p-1 bg-white">
+                          <div className="flex items-center border border-border rounded-lg p-1 bg-card">
                             <button
                               onClick={() => handleUpdateActive({ bold: !activeElement.bold })}
-                              className={`p-1.5 rounded transition-colors ${activeElement.bold ? 'bg-gray-100 text-indigo-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                              className={`p-1.5 rounded transition-colors ${activeElement.bold ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent'}`}
                             >
                               <Bold size={16} />
                             </button>
                             <button
                               onClick={() => handleUpdateActive({ italic: !activeElement.italic })}
-                              className={`p-1.5 rounded transition-colors ${activeElement.italic ? 'bg-gray-100 text-indigo-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                              className={`p-1.5 rounded transition-colors ${activeElement.italic ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent'}`}
                             >
                               <Italic size={16} />
                             </button>
                             <button
                               onClick={() => handleUpdateActive({ underline: !activeElement.underline })}
-                              className={`p-1.5 rounded transition-colors ${activeElement.underline ? 'bg-gray-100 text-indigo-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                              className={`p-1.5 rounded transition-colors ${activeElement.underline ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent'}`}
                             >
                               <Underline size={16} />
                             </button>
                           </div>
 
-                          <div className="flex items-center border border-gray-200 rounded-lg p-1 bg-white">
+                          <div className="flex items-center border border-border rounded-lg p-1 bg-card">
                             {(["left", "center", "right"] as const).map(align => (
                               <button
                                 key={align}
                                 onClick={() => handleUpdateActive({ align })}
-                                className={`p-1.5 rounded transition-colors ${activeElement.align === align ? 'bg-gray-100 text-indigo-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                                className={`p-1.5 rounded transition-colors ${activeElement.align === align ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent'}`}
                               >
                                 {align === 'left' && <AlignLeft size={16} />}
                                 {align === 'center' && <AlignCenter size={16} />}
@@ -774,38 +794,42 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                         </div>
 
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 uppercase tracking-wider mb-1">Text Color</label>
-                          <div className="flex items-center gap-2">
+                          <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.textColor')}</label>
+                          <div className="flex items-center gap-3">
                             <input
                               type="color"
                               value={rgbToHex(activeElement.color?.[0] || 0, activeElement.color?.[1] || 0, activeElement.color?.[2] || 0)}
                               onChange={(e) => handleUpdateActive({ color: hexToRgb(e.target.value) })}
-                              className="h-8 w-12 rounded cursor-pointer border-gray-200 border p-0.5"
+                              className="h-10 w-16 rounded-xl cursor-pointer border-border border p-1 bg-card hover:bg-accent transition-colors"
                             />
-                            <span className="text-xs font-mono text-gray-600">{rgbToHex(activeElement.color?.[0] || 0, activeElement.color?.[1] || 0, activeElement.color?.[2] || 0)}</span>
+                            <span className="text-xs font-black font-mono text-muted-foreground uppercase tracking-widest opacity-60">
+                              {rgbToHex(activeElement.color?.[0] || 0, activeElement.color?.[1] || 0, activeElement.color?.[2] || 0)}
+                            </span>
                           </div>
                         </div>
                       </div>
                     )}
 
                     {activeElement?.type === "qr" && (
-                      <div className="pt-2 border-t border-gray-100 mt-4">
-                        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Size: {activeElement.size}px</label>
+                      <div className="pt-2 border-t border-border mt-4">
+                        <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">
+                          {t('builder.qrSize')}: {activeElement.size}px
+                        </label>
                         <input
                           type="range"
-                          min="20" max="300"
+                          min="20" max="400"
                           value={activeElement.size || 80}
                           onChange={(e) => handleUpdateActive({ size: parseInt(e.target.value) })}
-                          className="w-full"
+                          className="w-full accent-primary"
                         />
                       </div>
                     )}
 
                     {activeElement?.type === "image" && (
-                      <div className="space-y-4 pt-2 border-t border-gray-100 mt-4">
-                        <div className="bg-gray-100 rounded-lg p-3 flex flex-col items-center gap-2 border border-gray-200">
+                      <div className="space-y-4 pt-2 border-t border-border mt-4">
+                        <div className="bg-muted/50 rounded-xl p-3 flex flex-col items-center gap-2 border border-border">
                           {activeElement.src && (
-                            <img src={getFullUrl(activeElement.src)} alt="Preview" className="max-h-32 object-contain rounded shadow-sm" />
+                            <img src={getFullUrl(activeElement.src)} alt="Preview" className="max-h-32 object-contain rounded-lg shadow-sm" />
                           )}
                           <div className="relative w-full">
                             <input
@@ -822,47 +846,51 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                                 }
                               }}
                             />
-                            <button className="w-full text-xs bg-white border border-gray-300 py-1.5 rounded hover:bg-gray-50 transition-colors">Change Image</button>
+                            <button className="w-full text-xs font-bold bg-card border border-border py-2 rounded-lg hover:bg-accent transition-all shadow-sm">
+                              {t('builder.changeImage')}
+                            </button>
                           </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
+                                       <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Width (px)</label>
+                            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.width')}</label>
                             <input
                               type="number"
                               value={activeElement.width}
                               onChange={(e) => handleUpdateActive({ width: parseInt(e.target.value) })}
-                              className="w-full text-sm border-gray-300 rounded-md p-1.5 border"
+                              className="w-full text-sm border-border rounded-lg p-2 border bg-card text-foreground outline-none transition-all"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Height (px)</label>
+                            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.height')}</label>
                             <input
                               type="number"
                               value={activeElement.height}
                               onChange={(e) => handleUpdateActive({ height: parseInt(e.target.value) })}
-                              className="w-full text-sm border-gray-300 rounded-md p-1.5 border"
+                              className="w-full text-sm border-border rounded-lg p-2 border bg-card text-foreground outline-none transition-all"
                             />
                           </div>
                         </div>
+          </div>
                       </div>
                     )}
 
-                    <div className="pt-6">
+                    <div className="pt-8 mb-12">
                       <button
                         onClick={handleDelete}
-                        className="w-full flex items-center justify-center gap-2 p-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors text-sm font-medium"
+                        className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-destructive/20 text-destructive bg-destructive/5 hover:bg-destructive hover:text-white hover:border-destructive transition-all text-xs font-black uppercase tracking-widest shadow-sm"
                       >
-                        <Trash2 size={16} /> Delete Element
+                        <Trash2 size={16} /> {t('builder.deleteElement')}
                       </button>
                     </div>
                   </>
                 ) : (
                   <div className="text-center py-12 px-4">
-                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                      <Layers className="text-gray-300" size={24} />
+                    <div className="w-20 h-20 bg-accent/50 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-border shadow-inner">
+                      <Layers className="text-muted-foreground/30" size={32} />
                     </div>
-                    <p className="text-sm text-gray-500">Select an element on the canvas to configure its properties.</p>
+                    <p className="text-xs font-bold text-muted-foreground leading-relaxed">
+                      {t('builder.selectToConfigure')}
+                    </p>
                   </div>
                 )}
               </div>
@@ -871,28 +899,28 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
         </div>
 
         {/* Sidebar Footer with Action Button */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+        <div className="p-5 border-t border-border bg-accent/30">
           {onSave && (
             <button
               onClick={() => onSave && onSave({ elements }, metadata, bgFile)}
-              className="w-full bg-indigo-600 text-white px-5 py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-indigo-700 hover:shadow-xl transition-all font-bold text-sm"
+              className="w-full bg-primary text-primary-foreground px-5 py-4 rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center gap-2.5 hover:opacity-90 transform active:scale-95 transition-all font-black text-xs uppercase tracking-widest"
             >
               {mode === 'issue' ? (
                 <>
                   <Award size={18} />
-                  Issue Certificate
+                  {t('certificates.issue.singleTitle')}
                 </>
               ) : (
                 <>
                   <Save size={18} />
-                  {isNew ? 'Create Template' : 'Save Changes'}
+                  {isNew ? t('common.create') : t('common.saveChanges')}
                 </>
               )}
             </button>
           )}
           {mode === 'issue' && (
-            <p className="text-[10px] text-gray-400 text-center mt-3 font-medium">
-              Review all fields before issuing the certificate.
+            <p className="text-[10px] text-muted-foreground font-bold text-center mt-4 tracking-tight opacity-60">
+              {t('builder.issueHint')}
             </p>
           )}
         </div>
@@ -901,7 +929,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
       {/* Main Canvas Area */}
       <div
         ref={containerRef}
-        className="flex-1 bg-gray-200/70 overflow-hidden relative flex items-center justify-center p-8"
+        className="flex-1 bg-muted/20 overflow-hidden relative flex items-center justify-center p-8 backdrop-blur-[2px]"
         onClick={() => { setSelectedId(null); setEditingId(null); }}
       >
         {/* The Document Canvas */}
@@ -954,7 +982,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                 disableDragging={mode === "issue"}
                 enableResizing={mode === "builder" && editingId !== el.id && (el.type === 'text' || el.type === 'image')}
                 lockAspectRatio={el.type === 'image'}
-                className={`${isSelected ? 'ring-2 ring-indigo-500 ring-offset-4' : 'hover:ring-1 hover:ring-indigo-300 border border-dashed border-transparent hover:border-indigo-400'}`}
+                className={`${isSelected ? 'ring-2 ring-primary ring-offset-4' : 'hover:ring-1 hover:ring-primary/40 border border-dashed border-transparent hover:border-primary/50'}`}
                 style={{
                   zIndex: isSelected ? 50 : 1,
                   display: 'flex',
@@ -1011,25 +1039,25 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                         className="w-full h-full object-contain pointer-events-none"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg pointer-events-none">
-                        <ImageIcon className="text-gray-400" size={32} />
+                      <div className="w-full h-full bg-accent/50 flex items-center justify-center border-2 border-dashed border-border rounded-lg pointer-events-none">
+                        <ImageIcon className="text-muted-foreground/30" size={32} />
                       </div>
                     )}
                     {isSelected && (
-                      <div className="absolute top-0 right-0 p-1 bg-indigo-600 text-white rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <div className="absolute top-0 right-0 p-1 bg-primary text-primary-foreground rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                         <GripHorizontal size={14} />
                       </div>
                     )}
                   </div>
                 ) : (
                   <div
-                    className="bg-white/80 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg shadow-sm drag-handle"
+                    className="bg-card/90 flex items-center justify-center border-2 border-dashed border-border rounded-xl shadow-lg drag-handle backdrop-blur-sm"
                     style={{
                       width: `${el.size || 80}px`,
                       height: `${el.size || 80}px`
                     }}
                   >
-                    <QrCode size={Math.max(20, (el.size || 80) / 2)} className="text-gray-500" />
+                    <QrCode size={Math.max(20, (el.size || 80) / 2)} className="text-muted-foreground" />
                   </div>
                 )}
               </Rnd>

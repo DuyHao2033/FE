@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Plus, MoreVertical, Layout, Search, Trash2, CheckCircle, XCircle, ChevronLeft, ChevronRight, Loader2, Copy } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, MoreVertical, Layout, Search, Trash2, CheckCircle, XCircle, ChevronLeft, ChevronRight, Loader2, Copy, Sparkles, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { getFullUrl } from '@/utils/url';
 import { api } from '@/lib/api';
-import { Modal } from '@/components/ui/Modal';
+import { useTranslation } from 'react-i18next';
 
 interface Template {
   id: string;
@@ -19,6 +19,7 @@ interface Template {
 }
 
 export default function TemplatesPage() {
+  const { t } = useTranslation();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,11 +32,10 @@ export default function TemplatesPage() {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setCurrentPage(1); // Reset to first page on search
+      setCurrentPage(1);
     }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -51,7 +51,6 @@ export default function TemplatesPage() {
         }
       });
       
-      // Handle both cases: backend returns array OR object with metadata
       if (Array.isArray(res.data)) {
         setTemplates(res.data);
         setTotalItems(res.data.length);
@@ -75,13 +74,11 @@ export default function TemplatesPage() {
   const handleDuplicate = async (tmpl: Template) => {
     try {
       setIsSubmitting(true);
-      // 1. Get full data
       const res = await api.get(`/templates/${tmpl.id}`);
       const fullTmpl = res.data;
       
-      // 2. Create new template
       const createRes = await api.post('/templates', {
-        name: `${fullTmpl.name} (Copy)`,
+        name: `${fullTmpl.name} ${t('common.copyHint')}`,
         category: fullTmpl.category,
         page_size: fullTmpl.page_size,
         orientation: fullTmpl.orientation,
@@ -89,7 +86,6 @@ export default function TemplatesPage() {
       });
       const newId = createRes.data.id;
 
-      // 3. Update with layout and background url
       await api.patch(`/templates/${newId}`, {
         layout_json: fullTmpl.layout_json,
         background_url: fullTmpl.background_url
@@ -99,7 +95,7 @@ export default function TemplatesPage() {
       fetchTemplates();
     } catch (error) {
       console.error("Failed to duplicate template", error);
-      alert("Failed to duplicate template");
+      alert(t('common.error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -114,142 +110,128 @@ export default function TemplatesPage() {
       fetchTemplates();
     } catch (error) {
       console.error("Failed to toggle status", error);
-      alert("Failed to update status");
+      alert(t('common.error'));
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="sm:flex sm:items-center sm:justify-between gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Templates</h1>
-          <p className="mt-2 text-sm text-gray-500">
-            Manage certificate designs, layouts, and mappings.
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest mb-1.5">
+            <Layout size={14} />
+            {t('sidebar.templates')}
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('sidebar.templates')}</h1>
+          <p className="mt-2 text-muted-foreground max-w-lg">
+            {t('templates.subtitle')}
           </p>
         </div>
         
-        <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-3 items-end sm:items-center">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search templates..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all bg-white"
-            />
-          </div>
-          
-          <Link
-            href="/templates/create"
-            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors whitespace-nowrap"
-          >
-            <Plus size={18} />
-            Create Template
-          </Link>
-        </div>
+        <Link
+          href="/templates/create"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all duration-200 whitespace-nowrap"
+        >
+          <Plus size={18} />
+          {t('templates.create')}
+        </Link>
+      </div>
+
+      <div className="relative max-w-xl group">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
+        <input
+          type="text"
+          placeholder={t('templates.searchPlaceholder')}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full rounded-xl border border-border bg-card py-3 pl-10 pr-4 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+        />
       </div>
       
       {loading ? (
-          <div className="py-20 text-center text-sm text-gray-500">Loading templates...</div>
+          <div className="py-32 text-center">
+            <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary opacity-50" />
+            <p className="mt-4 text-sm font-bold text-muted-foreground tracking-widest uppercase">{t('common.fetchingData')}</p>
+          </div>
       ) : isSubmitting ? (
-          <div className="py-20 text-center text-sm text-gray-500 flex flex-col items-center gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-              <span>Processing request...</span>
+          <div className="py-32 text-center flex flex-col items-center gap-6 animate-pulse">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 blur-2xl animate-pulse" />
+                <Loader2 size={40} className="animate-spin text-primary relative z-10" />
+              </div>
+              <p className="text-sm font-bold text-muted-foreground tracking-widest uppercase">{t('common.processing')}</p>
           </div>
       ) : templates.length === 0 ? (
-          <div className="py-20 text-center border-2 border-dashed border-gray-200 rounded-xl bg-white">
-             <Layout className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-             <h3 className="mt-2 text-sm font-semibold text-gray-900">No templates found</h3>
-             <p className="mt-1 text-sm text-gray-500">Get started by creating a new certificate template.</p>
+          <div className="py-24 text-center border-2 border-dashed border-border rounded-3xl bg-card/50 backdrop-blur-sm">
+             <div className="bg-accent w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+               <Layout className="h-10 w-10 text-muted-foreground/40" />
+             </div>
+             <h3 className="text-xl font-bold text-foreground">{t('templates.noData')}</h3>
+             <p className="mt-2 text-muted-foreground max-w-sm mx-auto">{t('templates.noDataSub')}</p>
           </div>
       ) : (
           <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
             {templates.map((tmpl: Template) => (
-                <div key={tmpl.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow group flex flex-col relative">
-                    <div className="h-48 bg-gray-100 flex items-center justify-center border-b border-gray-100 relative group-hover:opacity-90 transition-opacity overflow-hidden outline outline-1 outline-gray-200/50">
+                <div key={tmpl.id} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all group flex flex-col relative border-b-4 border-b-transparent hover:border-b-primary hover:-translate-y-1">
+                    <div className="h-52 bg-accent/30 flex items-center justify-center border-b border-border relative overflow-hidden">
                         {tmpl.background_url ? (
                             <img 
                                 src={getFullUrl(tmpl.background_url)} 
                                 alt={tmpl.name} 
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             />
                         ) : (
-                            <div className="flex flex-col items-center gap-2">
-                                <Layout className="h-12 w-12 text-gray-300" />
-                                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">No Background</span>
+                            <div className="flex flex-col items-center gap-2 opacity-20">
+                                <Layout className="h-14 w-14 text-muted-foreground" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">{t('common.noBackground')}</span>
                             </div>
                         )}
-                        <div className="absolute top-3 right-3 flex gap-2">
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider shadow-sm ring-1 ring-inset ${tmpl.is_active ? 'bg-green-500 text-white ring-green-600/20' : 'bg-gray-500 text-white ring-gray-600/20'}`}>
-                                {tmpl.is_active ? 'Active' : 'Draft'}
+                        <div className="absolute top-4 right-4 shadow-2xl">
+                            <span className={`inline-flex items-center rounded-xl px-3 py-1 text-[10px] font-black uppercase tracking-widest border ${tmpl.is_active ? 'bg-emerald-500 text-white border-emerald-400 shadow-emerald-500/20' : 'bg-muted/80 text-muted-foreground border-border backdrop-blur-md'}`}>
+                                {tmpl.is_active ? t('common.active') : t('common.draft')}
                             </span>
                         </div>
+                        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300" />
                     </div>
-                    <div className="p-5 flex-1 flex flex-col">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-1">{tmpl.name}</h3>
-                        <p className="text-sm text-gray-500 mb-4">{tmpl.category || 'General'}</p>
-                        
-                        <div className="flex flex-col text-xs text-gray-400 gap-1 mb-4">
-                            <div className="flex justify-between">
-                                <span>Format: <span className="font-medium text-gray-700">{tmpl.page_size}</span></span>
-                                <span>Orientation: <span className="font-medium text-gray-700 capitalize">{tmpl.orientation}</span></span>
-                            </div>
-                            {tmpl.certificate_type_id && (
-                                <div className="mt-1">
-                                    <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 uppercase tracking-tighter">
-                                        Type ID: {tmpl.certificate_type_id.substring(0, 8)}...
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                        
-                        <div className="mt-auto pt-4 border-t border-gray-100 flex gap-2">
-                            <Link 
-                              href={`/templates/${tmpl.id}/builder`}
-                              className="flex-1 text-center bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                                Edit Template
-                            </Link>
-                            <div className="relative">
+                    <div className="p-6 flex-1 flex flex-col gap-1">
+                        <div className="flex items-center justify-between gap-4 mb-2">
+                           <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{tmpl.category || t('common.general')}</p>
+                           <div className="relative">
                                 <button 
                                     onClick={() => setActiveMenuId(activeMenuId === tmpl.id ? null : tmpl.id)}
-                                    className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
+                                    className={`p-2 rounded-lg transition-all border ${activeMenuId === tmpl.id ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-accent border-border/50'}`}
                                 >
                                     <MoreVertical size={16} />
                                 </button>
                                 
                                 {activeMenuId === tmpl.id && (
                                     <>
-                                        <div 
-                                            className="fixed inset-0 z-10" 
-                                            onClick={() => setActiveMenuId(null)}
-                                        />
-                                        <div className="absolute right-0 bottom-full mb-2 w-48 rounded-xl bg-white shadow-xl ring-1 ring-black/5 z-20 overflow-hidden border border-gray-100">
-                                            <div className="py-1">
+                                        <div className="fixed inset-0 z-10" onClick={() => setActiveMenuId(null)} />
+                                        <div className="absolute right-0 top-full mt-2 w-48 rounded-2xl bg-card shadow-2xl ring-1 ring-border z-20 overflow-hidden border border-border/50 animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="p-1.5 flex flex-col gap-1">
                                                 <button
                                                     onClick={() => toggleActive(tmpl)}
-                                                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                    className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground hover:bg-accent rounded-xl transition-all"
                                                 >
                                                     {tmpl.is_active ? (
                                                         <>
-                                                            <XCircle size={16} className="text-gray-400" />
-                                                            <span>Deactivate</span>
+                                                            <XCircle size={16} className="text-muted-foreground" />
+                                                            {t('common.deactivate')}
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <CheckCircle size={16} className="text-indigo-500" />
-                                                            <span>Activate</span>
+                                                            <CheckCircle size={16} className="text-emerald-500" />
+                                                            {t('common.activate')}
                                                         </>
                                                     )}
                                                 </button>
                                                 <button
                                                     onClick={() => handleDuplicate(tmpl)}
-                                                    className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                    className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground hover:bg-accent rounded-xl transition-all"
                                                 >
-                                                    <Copy size={16} className="text-gray-400" />
-                                                    <span>Duplicate</span>
+                                                    <Copy size={16} className="text-muted-foreground" />
+                                                    {t('common.duplicate')}
                                                 </button>
                                             </div>
                                         </div>
@@ -257,32 +239,52 @@ export default function TemplatesPage() {
                                 )}
                             </div>
                         </div>
+                        <h3 className="text-xl font-bold text-foreground line-clamp-1 leading-tight mb-4">{tmpl.name}</h3>
+                        
+                        <div className="flex flex-wrap gap-2 mb-6">
+                           <span className="inline-flex items-center gap-1.5 rounded-lg bg-accent/50 text-accent-foreground px-2.5 py-1 text-[10px] font-bold uppercase border border-border/50">
+                             <SlidersHorizontal size={12} className="text-primary opacity-60" />
+                             {tmpl.page_size}
+                           </span>
+                           <span className="inline-flex items-center gap-1.5 rounded-lg bg-accent/50 text-accent-foreground px-2.5 py-1 text-[10px] font-bold uppercase border border-border/50">
+                             <Layout size={12} className="text-primary opacity-60" />
+                             {t(`common.${tmpl.orientation.toLowerCase()}` as any)}
+                           </span>
+                        </div>
+                        
+                        <Link 
+                          href={`/templates/${tmpl.id}/builder`}
+                          className="mt-auto w-full inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-foreground hover:bg-primary hover:text-primary-foreground border border-border/50 transition-all duration-300"
+                        >
+                          <Sparkles size={14} />
+                          {t('common.edit')}
+                        </Link>
                     </div>
                 </div>
             ))}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-between border-t border-gray-200 pt-6">
-                  <div className="text-sm text-gray-500">
-                      Showing <span className="font-medium text-gray-900">{(currentPage - 1) * pageSize + 1}</span> to <span className="font-medium text-gray-900">{Math.min(currentPage * pageSize, totalItems)}</span> of <span className="font-medium text-gray-900">{totalItems}</span> results
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-border pt-8 pb-12">
+                  <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                      {t('common.showing')} <span className="text-foreground">{(currentPage - 1) * pageSize + 1}</span>-
+                      <span className="text-foreground">{Math.min(currentPage * pageSize, totalItems)}</span> / 
+                      <span className="text-foreground"> {totalItems}</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                       <button
                           onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                           disabled={currentPage === 1}
-                          className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
+                          className="flex items-center justify-center w-10 h-10 rounded-xl border border-border text-foreground hover:bg-accent disabled:opacity-30 transition-all shadow-sm"
                       >
-                          <ChevronLeft size={16} />
-                          Previous
+                          <ChevronLeft size={18} />
                       </button>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1.5">
                           {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                               <button
                                   key={page}
                                   onClick={() => setCurrentPage(page)}
-                                  className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${currentPage === page ? 'bg-indigo-600 text-white' : 'hover:bg-gray-100 text-gray-700 border border-transparent hover:border-gray-200'}`}
+                                  className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${currentPage === page ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110' : 'hover:bg-accent text-muted-foreground border border-border shadow-sm'}`}
                               >
                                   {page}
                               </button>
@@ -291,17 +293,15 @@ export default function TemplatesPage() {
                       <button
                           onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                           disabled={currentPage === totalPages}
-                          className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
+                          className="flex items-center justify-center w-10 h-10 rounded-xl border border-border text-foreground hover:bg-accent disabled:opacity-30 transition-all shadow-sm"
                       >
-                          Next
-                          <ChevronRight size={16} />
+                          <ChevronRight size={18} />
                       </button>
                   </div>
               </div>
           )}
           </>
       )}
-
     </div>
   );
 }

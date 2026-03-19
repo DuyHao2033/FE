@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { Type, Upload, Trash2, Plus, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { useAuthStore } from '@/lib/store';
+import { useTranslation } from 'react-i18next';
 
 interface Font {
   name: string;
@@ -12,6 +13,7 @@ interface Font {
 }
 
 export default function FontsPage() {
+  const { t } = useTranslation();
   const [fonts, setFonts] = useState<Font[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -31,7 +33,7 @@ export default function FontsPage() {
       setError(null);
     } catch (err: any) {
       console.error('Error fetching fonts:', err);
-      setError('Could not load fonts. Please try again.');
+      setError(t('fonts.errorLoad'));
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +68,7 @@ export default function FontsPage() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (!file.name.toLowerCase().endsWith('.ttf')) {
-        setError('Only .ttf files are supported.');
+        setError(t('fonts.errorTtf'));
         return;
       }
       setSelectedFile(file);
@@ -89,7 +91,7 @@ export default function FontsPage() {
           'Content-Type': 'multipart/form-data',
         },
       });
-      setSuccess(`Font "${selectedFile.name}" uploaded successfully!`);
+      setSuccess(t('fonts.uploadSuccess', { name: selectedFile.name }));
       setShowUploadModal(false);
       setSelectedFile(null);
       fetchFonts();
@@ -98,114 +100,118 @@ export default function FontsPage() {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
       console.error('Error uploading font:', err);
-      setError(err.response?.data?.detail || 'Failed to upload font.');
+      setError(err.response?.data?.detail || t('fonts.errorUpload'));
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleDelete = async (filename: string) => {
-    if (!confirm(`Are you sure you want to delete font "${filename}"?`)) return;
+    if (!confirm(t('fonts.deleteConfirm', { name: filename }))) return;
 
     try {
       await api.delete(`/fonts/${filename}`);
-      setSuccess('Font deleted successfully!');
+      setSuccess(t('fonts.deleteSuccess'));
       fetchFonts();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
       console.error('Error deleting font:', err);
-      setError('Failed to delete font.');
+      setError(t('fonts.errorDelete'));
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Font Management</h1>
-          <p className="text-gray-500 mt-1">Manage system-wide fonts for your certificate templates.</p>
+          <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest mb-1.5">
+            <Type size={14} />
+            {t('fonts.title')}
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('fonts.title')}</h1>
+          <p className="mt-2 text-muted-foreground">{t('fonts.subtitle')}</p>
         </div>
         {isSuperAdmin && (
           <button 
             onClick={() => setShowUploadModal(true)}
-            className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl shadow-sm hover:bg-indigo-700 transition-all font-medium"
+            className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all font-bold text-sm"
           >
             <Plus size={18} />
-            <span>Upload Font</span>
+            <span>{t('fonts.upload')}</span>
           </button>
         )}
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
           <AlertCircle size={20} />
-          <p className="text-sm font-medium">{error}</p>
+          <p className="text-sm font-bold">{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-4 py-3 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
           <CheckCircle2 size={20} />
-          <p className="text-sm font-medium">{success}</p>
+          <p className="text-sm font-bold">{success}</p>
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="animate-spin text-indigo-600 h-10 w-10 mb-4" />
-            <p className="text-gray-500 font-medium">Loading fonts...</p>
+          <div className="flex flex-col items-center justify-center py-24">
+            <Loader2 className="animate-spin text-primary h-10 w-10 mb-4" />
+            <p className="text-muted-foreground font-bold text-sm uppercase tracking-widest">{t('common.loading')}</p>
           </div>
         ) : fonts.length === 0 ? (
-          <div className="text-center py-16 px-4">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
-              <Type className="text-gray-300" size={28} />
+          <div className="text-center py-24 px-4">
+            <div className="w-20 h-20 bg-accent rounded-3xl flex items-center justify-center mx-auto mb-6 border border-border">
+              <Type className="text-muted-foreground/40" size={32} />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">No fonts found</h3>
-            <p className="text-gray-500 max-w-sm mx-auto mt-2">
-              Upload .ttf fonts to use them in your certificate templates. These fonts must support the characters you plan to use (e.g., Vietnamese).
+            <h3 className="text-xl font-bold text-foreground">{t('fonts.noFonts')}</h3>
+            <p className="text-muted-foreground max-w-sm mx-auto mt-2 text-sm">
+              {t('fonts.uploadHint')}
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Font Name</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Filename</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Preview</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                <tr className="bg-accent/30 border-b border-border">
+                  <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('common.name')}</th>
+                  <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('common.code')}</th>
+                  <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('builder.placeholders.newText')}</th>
+                  <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">{t('common.actions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-border">
                 {fonts.map((font) => (
                   <tr key={font.filename} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-                          <Type size={16} />
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/10">
+                          <Type size={18} />
                         </div>
-                        <span className="font-medium text-gray-900">{font.name}</span>
+                        <span className="font-bold text-foreground">{font.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <code className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded font-mono">
+                    <td className="px-6 py-5">
+                      <code className="text-xs bg-accent text-muted-foreground px-2 py-1 rounded-lg font-mono border border-border/50">
                         {font.filename}
                       </code>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-xl text-gray-800" style={{ fontFamily: font.name }}>
-                        Abc 123 Tiếng Việt
+                    <td className="px-6 py-5">
+                      <div className="text-2xl text-foreground" style={{ fontFamily: font.name }}>
+                        {t('fonts.previewText')}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       {isSuperAdmin && (
                         <button 
                           onClick={() => handleDelete(font.filename)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                          title="Delete Font"
+                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all"
+                          title={t('common.delete')}
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={20} />
                         </button>
                       )}
                     </td>
@@ -225,11 +231,11 @@ export default function FontsPage() {
           setSelectedFile(null);
           setError(null);
         }}
-        title="Upload New Font"
+        title={t('fonts.uploadNew')}
       >
         <div className="space-y-6 py-2">
           <div 
-            className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all ${selectedFile ? 'border-indigo-500 bg-indigo-50/30' : 'border-gray-200 hover:border-indigo-400 hover:bg-gray-50'}`}
+            className={`border-2 border-dashed rounded-3xl p-10 text-center transition-all ${selectedFile ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-accent/30'}`}
           >
             <input 
               type="file" 
@@ -239,45 +245,45 @@ export default function FontsPage() {
               id="font-upload"
             />
             <label htmlFor="font-upload" className="cursor-pointer flex flex-col items-center gap-4">
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center ${selectedFile ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                {isUploading ? <Loader2 className="animate-spin" size={28} /> : <Upload size={28} />}
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all ${selectedFile ? 'bg-primary text-primary-foreground' : 'bg-accent text-muted-foreground/40'}`}>
+                {isUploading ? <Loader2 className="animate-spin" size={32} /> : <Upload size={32} />}
               </div>
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-gray-900">
-                  {selectedFile ? selectedFile.name : 'Click to select font file'}
+              <div className="space-y-2">
+                <p className="text-sm font-bold text-foreground">
+                  {selectedFile ? selectedFile.name : t('fonts.clickToSelect')}
                 </p>
-                <p className="text-xs text-gray-500">Only .ttf files are supported. Max size 10MB.</p>
+                <p className="text-xs text-muted-foreground">{t('fonts.ttfOnlyHint')}</p>
               </div>
             </label>
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-            <AlertCircle className="text-amber-600 shrink-0" size={20} />
-            <p className="text-xs text-amber-800 leading-relaxed">
-              <strong>Note:</strong> Ensure the font supports Vietnamese characters (diacritics) if you plan to use them in certificates. Standard fonts like Arial, Times New Roman, or Roboto are recommended.
+          <div className="bg-accent/50 border border-border rounded-2xl p-4 flex gap-3">
+            <AlertCircle className="text-primary shrink-0" size={20} />
+            <p className="text-xs text-muted-foreground leading-relaxed font-medium">
+              {t('fonts.vietnameseSupportNote')}
             </p>
           </div>
 
-          <div className="flex gap-3 justify-end">
+          <div className="flex gap-3 justify-end pt-2">
             <button 
               onClick={() => setShowUploadModal(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex-1 px-4 py-3 rounded-xl border border-border text-xs font-bold uppercase tracking-widest hover:bg-accent transition-all"
               disabled={isUploading}
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button 
               onClick={handleUpload}
               disabled={!selectedFile || isUploading}
-              className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all ${!selectedFile || isUploading ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'}`}
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg transition-all ${!selectedFile || isUploading ? 'bg-accent text-muted-foreground cursor-not-allowed' : 'bg-primary text-primary-foreground shadow-primary/20 hover:opacity-90'}`}
             >
               {isUploading ? (
                 <>
                   <Loader2 className="animate-spin" size={16} />
-                  <span>Uploading...</span>
+                  <span>{t('fonts.uploading')}</span>
                 </>
               ) : (
-                <span>Upload Font</span>
+                <span>{t('fonts.upload')}</span>
               )}
             </button>
           </div>

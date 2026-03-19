@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
-import { Award, Plus, FileText, Download, CheckCircle, XCircle, Search, Layers } from 'lucide-react';
+import { Award, Plus, FileText, Download, CheckCircle, XCircle, Search, Layers, RotateCcw } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
+import { useTranslation } from 'react-i18next';
 
 interface Certificate {
     id: string;
@@ -18,6 +19,7 @@ interface Certificate {
 }
 
 export default function CertificatesPage() {
+  const { t } = useTranslation();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,7 +49,7 @@ export default function CertificatesPage() {
   const handleRevoke = async () => {
     if (!revokeTarget) return;
     if (!revokeReason.trim()) {
-      alert("Please provide a revoke reason.");
+      alert(t('certificates.revokeReasonPlaceholder'));
       return;
     }
 
@@ -69,110 +71,109 @@ export default function CertificatesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="sm:flex sm:items-center sm:justify-between">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Certificates</h1>
-          <p className="mt-2 text-sm text-gray-500">
-            View, issue, and manage digital certificates.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('certificates.title')}</h1>
+          <p className="mt-2 text-muted-foreground">{t('certificates.subtitle')}</p>
         </div>
-        <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-wrap">
           <Link
             href="/certificates/batches"
-            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-center text-sm font-semibold text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-bold text-foreground border border-border shadow-sm hover:bg-accent transition-all duration-200"
           >
-             <Layers size={18} />
-             Manage Batches
+             <Layers size={18} className="text-primary" />
+             {t('certificates.manageBatches')}
           </Link>
           <Link
             href="/certificates/batch-issue"
-            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-center text-sm font-semibold text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-bold text-foreground border border-border shadow-sm hover:bg-accent transition-all duration-200"
           >
-             <FileText size={18} />
-             Batch Issue (Excel)
+             <FileText size={18} className="text-blue-500" />
+             {t('certificates.batchIssue')}
           </Link>
           <Link
             href="/certificates/issue"
-            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors"
+            className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all duration-200"
           >
             <Plus size={18} />
-            Issue Single
+            {t('certificates.issueSingle')}
           </Link>
         </div>
       </div>
       
-      <div className="flex flex-col sm:flex-row gap-4 mb-6 mt-8">
-         <div className="relative flex-1 max-w-lg">
-             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                 <Search className="h-5 w-5 text-gray-400" />
-             </div>
-             <input 
-                 type="text" 
-                 placeholder="Search by name or code..."
-                 value={searchTerm}
-                 onChange={(e) => setSearchTerm(e.target.value)}
-                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-             />
-         </div>
+      <div className="relative max-w-lg">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-muted-foreground/60" />
+          </div>
+          <input 
+              type="text" 
+              placeholder={t('common.searchPlaceholder')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all sm:text-sm shadow-sm"
+          />
       </div>
 
-      <div className="bg-white shadow-sm ring-1 ring-gray-200 rounded-xl overflow-hidden">
-         <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+      <div className="bg-card shadow-sm border border-border rounded-2xl overflow-hidden overflow-x-auto">
+         <table className="min-w-full divide-y divide-border">
+            <thead className="bg-accent/30">
                <tr>
-                  <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Recipient & Title</th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Code / Registry</th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Issued On</th>
-                  <th scope="col" className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900">Actions</th>
+                  <th scope="col" className="py-4 pl-6 pr-3 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('certificates.recipient')} & {t('certificates.certTitle')}</th>
+                  <th scope="col" className="px-3 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('certificates.codeRegistry')}</th>
+                  <th scope="col" className="px-3 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('common.status')}</th>
+                  <th scope="col" className="px-3 py-4 text-left text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('certificates.issuedOn')}</th>
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('common.actions')}</th>
                </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-border bg-card">
                 {loading ? (
-                    <tr><td colSpan={5} className="py-8 text-center text-sm text-gray-500">Loading certificates...</td></tr>
+                    <tr><td colSpan={5} className="py-12 text-center text-sm text-muted-foreground animate-pulse">{t('common.loading')}</td></tr>
                 ) : filteredCerts.length === 0 ? (
-                    <tr><td colSpan={5} className="py-12 text-center text-sm text-gray-500 flex flex-col items-center justify-center">
-                        <Award className="w-12 h-12 text-gray-300 mb-3" />
-                        No certificates found.
+                    <tr><td colSpan={5} className="py-20 text-center text-sm text-muted-foreground">
+                        <div className="flex flex-col items-center justify-center opacity-40">
+                          <Award className="w-16 h-16 mb-4" />
+                          <p className="font-medium text-lg">{t('common.noData')}</p>
+                        </div>
                     </td></tr>
                 ) : (
                     filteredCerts.map((cert) => (
-                       <tr key={cert.id} className="hover:bg-gray-50">
-                          <td className="whitespace-nowrap py-4 pl-4 pr-3 sm:pl-6">
-                              <div className="font-medium text-gray-900">{cert.recipient_name}</div>
-                              <div className="text-sm text-gray-500">{cert.title}</div>
+                       <tr key={cert.id} className="hover:bg-accent/10 transition-colors group">
+                          <td className="whitespace-nowrap py-5 pl-6 pr-3">
+                              <div className="font-bold text-foreground">{cert.recipient_name}</div>
+                              <div className="text-xs text-muted-foreground mt-0.5">{cert.title}</div>
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm font-mono text-gray-600">
-                              <div className="font-bold">{cert.cert_code}</div>
-                              {cert.registry_number && <div className="text-[10px] text-indigo-500 uppercase tracking-tighter">Reg: {cert.registry_number}</div>}
+                          <td className="whitespace-nowrap px-3 py-5 text-sm font-mono text-foreground/80">
+                              <div className="font-bold text-xs bg-accent/50 px-2 py-1 rounded inline-block border border-border/50">{cert.cert_code}</div>
+                              {cert.registry_number && <div className="text-[10px] text-primary font-bold mt-1 uppercase tracking-tighter">Reg: {cert.registry_number}</div>}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                          <td className="whitespace-nowrap px-3 py-5 text-sm">
                               {cert.status === 'valid' || cert.status === 'active' ? (
-                                  <span className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20">
-                                      <CheckCircle size={14} className="text-green-500" /> Valid
+                                  <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                      <CheckCircle size={14} /> {t('certificates.status.valid')}
                                   </span>
                               ) : cert.status === 'replaced' ? (
-                                  <span className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-600/20">
-                                      <XCircle size={14} className="text-orange-500" /> Replaced
+                                  <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                      <RotateCcw size={14} /> {t('certificates.status.replaced')}
                                   </span>
                               ) : (
-                                  <span className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20">
-                                      <XCircle size={14} className="text-red-500" /> Revoked
+                                  <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold bg-destructive/10 text-destructive dark:text-destructive/80 border border-destructive/20">
+                                      <XCircle size={14} /> {t('certificates.status.revoked')}
                                   </span>
                               )}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          <td className="whitespace-nowrap px-3 py-5 text-sm text-muted-foreground">
                              {new Date(cert.issued_at).toLocaleDateString()}
                           </td>
-                          <td className="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 flex justify-end gap-2">
+                          <td className="whitespace-nowrap py-5 pl-3 pr-6 text-right text-sm font-medium flex justify-end gap-3">
                              <a 
                                 href={cert.pdf_url ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1','') || 'http://localhost:8000'}${cert.pdf_url}` : '#'}
                                 target="_blank"
                                 rel="noreferrer"
-                                className={`inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors ${!cert.pdf_url && 'opacity-50 pointer-events-none'}`}
+                                className={`inline-flex items-center gap-2 text-foreground bg-accent/50 hover:bg-accent px-4 py-2 rounded-xl transition-all duration-200 border border-border/50 font-bold group ${!cert.pdf_url && 'opacity-30 pointer-events-none'}`}
                              >
-                                 <Download size={16} /> PDF
+                                 <Download size={16} className="text-primary group-hover:scale-110 transition-transform" /> 
+                                 <span className="text-xs">PDF</span>
                              </a>
                              {(cert.status === 'valid' || cert.status === 'active') && (
                                  <button
@@ -180,9 +181,10 @@ export default function CertificatesPage() {
                                      setRevokeTarget(cert);
                                      setRevokeReason("");
                                    }}
-                                   className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md transition-colors"
+                                   className="inline-flex items-center gap-2 text-destructive bg-destructive/5 hover:bg-destructive/10 px-4 py-2 rounded-xl transition-all duration-200 border border-transparent hover:border-destructive/20 font-bold group"
                                  >
-                                     Revoke
+                                     <XCircle size={16} className="group-hover:rotate-12 transition-transform" />
+                                     <span className="text-xs">{t('certificates.revoke')}</span>
                                  </button>
                              )}
                           </td>
@@ -200,43 +202,45 @@ export default function CertificatesPage() {
           setRevokeTarget(null);
           setRevokeReason("");
         }}
-        title="Revoke certificate"
+        title={t('certificates.revokeTitle')}
       >
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Revoke <span className="font-semibold text-gray-900">{revokeTarget?.cert_code}</span> for{' '}
-            <span className="font-semibold text-gray-900">{revokeTarget?.recipient_name}</span>.
-          </p>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Reason</label>
+        <div className="space-y-6 p-1">
+          <div className="p-4 rounded-xl bg-destructive/5 border border-destructive/10">
+            <p className="text-sm text-foreground/80 leading-relaxed font-medium">
+              {t('certificates.revokeConfirm')} <br/>
+              <span className="font-bold text-destructive">{revokeTarget?.cert_code}</span> ({revokeTarget?.recipient_name}).
+            </p>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{t('common.reason')}</label>
             <textarea
               value={revokeReason}
               onChange={(e) => setRevokeReason(e.target.value)}
               rows={4}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
-              placeholder="Enter revoke reason..."
+              className="w-full rounded-xl bg-accent/30 border border-border px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+              placeholder={t('certificates.revokeReasonPlaceholder')}
             />
           </div>
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3">
             <button
               type="button"
               disabled={isRevoking}
               onClick={() => {
-                if (isRevoking) return;
                 setRevokeTarget(null);
                 setRevokeReason("");
               }}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl border border-border bg-card text-sm font-bold text-muted-foreground hover:bg-accent transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="button"
               disabled={isRevoking}
               onClick={handleRevoke}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl bg-destructive text-white text-sm font-bold hover:opacity-90 shadow-lg shadow-destructive/20 transition-all disabled:opacity-50 flex items-center gap-2"
             >
-              {isRevoking ? "Revoking..." : "Revoke"}
+              {isRevoking ? <RotateCcw size={16} className="animate-spin" /> : null}
+              {isRevoking ? t('common.loading') : t('common.confirm')}
             </button>
           </div>
         </div>

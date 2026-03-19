@@ -1,6 +1,9 @@
+"use client";
+
 import React from 'react';
 import './globals.css';
 import { AuthProvider } from '@/components/AuthProvider';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 export default function RootLayout({
   children,
@@ -8,11 +11,18 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className="bg-gray-50 text-slate-900 font-sans">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-background text-foreground font-sans antialiased min-h-screen">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

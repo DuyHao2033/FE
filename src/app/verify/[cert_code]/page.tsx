@@ -444,7 +444,9 @@ export default function VerifyPage() {
     const renders: Promise<void>[] = [];
 
     const renderPdf = async () => {
-      const loadingTask = pdfjsLib.getDocument(pdfPreview.url);
+      const url = pdfPreview.url;
+      if (!url) return;
+      const loadingTask = pdfjsLib.getDocument(url);
       const pdf = (await loadingTask.promise) as PDFDocumentProxy;
       if (cancelled) return;
 

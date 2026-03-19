@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Layout, ChevronRight, Search, Loader2, ArrowLeft, FileText, Download, Upload, AlertCircle, CheckCircle2, ListOrdered, ClipboardList } from 'lucide-react';
 import { getFullUrl } from '@/utils/url';
+import { useTranslation } from 'react-i18next';
 
 interface Template {
   id: string;
@@ -18,6 +19,7 @@ interface Template {
 
 export default function BatchIssuePage() {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const [step, setStep] = useState<'select-template' | 'configure'>('select-template');
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,8 @@ export default function BatchIssuePage() {
 
   const handleTemplateSelect = (tmpl: Template) => {
     setSelectedTemplate(tmpl);
-    setBatchName(`Đợt cấp ${tmpl.name} - ${new Date().toLocaleDateString('vi-VN')}`);
+    const dateStr = new Date().toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US');
+    setBatchName(`${t('certificates.batches.title')} ${tmpl.name} - ${dateStr}`);
     setStep('configure');
   };
 
@@ -81,14 +84,14 @@ export default function BatchIssuePage() {
       link.remove();
     } catch (error) {
       console.error("Failed to download template", error);
-      alert("Failed to download Excel template.");
+      alert(t('common.error'));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTemplate || !file) {
-        alert("Please select a template and upload an excel file.");
+        alert(t('common.error'));
         return;
     }
 
@@ -111,7 +114,7 @@ export default function BatchIssuePage() {
       router.push('/certificates/batches');
     } catch (error) {
       console.error("Failed to issue batch", error);
-      alert("Failed to create batch issuance. Please check your file format.");
+      alert(t('common.error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -136,11 +139,11 @@ export default function BatchIssuePage() {
             </button>
             <div>
                 <h1 className="text-2xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
-                    {step === 'select-template' ? 'Cấp phát hàng loạt' : 'Cấu hình đợt cấp'}
+                    {step === 'select-template' ? t('certificates.batches.batchIssue.title') : t('certificates.batches.batchIssue.config')}
                     <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full font-bold uppercase tracking-wider">Batch</span>
                 </h1>
                 <p className="text-sm text-gray-500 font-medium mt-0.5">
-                    {step === 'select-template' ? 'Bước 1: Chọn mẫu chứng chỉ muốn cấp' : `Bước 2: Tải lên danh sách cho ${selectedTemplate?.name}`}
+                    {step === 'select-template' ? t('certificates.batches.batchIssue.step1') : t('certificates.batches.batchIssue.step2', { name: selectedTemplate?.name })}
                 </p>
             </div>
           </div>
@@ -163,7 +166,7 @@ export default function BatchIssuePage() {
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
             <input
               type="text"
-              placeholder="Tìm kiếm mẫu thiết kế..."
+              placeholder={t('builder.placeholders.searchTemplates')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-14 pr-6 py-4 text-base rounded-[2.5rem] border-2 border-gray-100 focus:outline-none focus:border-indigo-500 transition-all bg-white shadow-xl shadow-gray-200/20"
@@ -178,15 +181,15 @@ export default function BatchIssuePage() {
                         <div className="w-2 h-2 bg-indigo-500 rounded-full animate-ping"></div>
                     </div>
                 </div>
-                <span className="text-base font-bold text-gray-500 tracking-wide">Đang tải danh sách mẫu...</span>
+                <span className="text-base font-bold text-gray-500 tracking-wide">{t('certificates.batches.batchIssue.loading')}</span>
              </div>
           ) : filteredTemplates.length === 0 ? (
             <div className="py-32 text-center border-4 border-dashed border-gray-100 rounded-[3rem] bg-white/50 backdrop-blur-xl">
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
                 <Layout className="h-10 w-10 text-gray-300" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">Không tìm thấy mẫu nào</h3>
-              <p className="mt-2 text-gray-500 font-medium">Vui lòng thử từ khóa khác hoặc tạo mẫu mới.</p>
+              <h3 className="text-2xl font-bold text-gray-900">{t('certificates.batches.batchIssue.noTemplates')}</h3>
+              <p className="mt-2 text-gray-500 font-medium">{t('certificates.batches.batchIssue.noTemplatesSub')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-12">
@@ -206,7 +209,7 @@ export default function BatchIssuePage() {
                     ) : (
                       <div className="flex flex-col items-center gap-3 opacity-20">
                         <Layout className="h-16 w-16 text-gray-400" />
-                        <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Mẫu chứng chỉ</span>
+                        <span className="text-xs font-bold uppercase tracking-widest text-gray-500">{t('sidebar.templates')}</span>
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -217,14 +220,14 @@ export default function BatchIssuePage() {
                     </div>
                   </div>
                   <div className="p-6 flex-1 flex flex-col gap-2">
-                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider leading-none mb-1">{tmpl.category || 'Chung'}</p>
+                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider leading-none mb-1">{tmpl.category || t('common.general')}</p>
                     <h3 className="text-xl font-bold text-gray-900 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors">{tmpl.name}</h3>
                     <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 border border-gray-100">
                             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                            <span className="text-xs text-gray-600 font-bold uppercase tracking-tight">Active</span>
+                            <span className="text-xs text-gray-600 font-bold uppercase tracking-tight">{t('common.active')}</span>
                         </div>
-                        <span className="text-xs text-gray-400 font-bold uppercase tracking-tight">{tmpl.orientation}</span>
+                        <span className="text-xs text-gray-400 font-bold uppercase tracking-tight">{tmpl.orientation === 'landscape' ? t('common.landscape') : t('common.portrait')}</span>
                     </div>
                   </div>
                 </div>
@@ -240,17 +243,17 @@ export default function BatchIssuePage() {
                 <div className="w-24 h-24 bg-indigo-50 rounded-[2rem] flex items-center justify-center mb-6 rotate-3">
                     <ClipboardList className="text-indigo-600" size={40} />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Mẫu đã chọn</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{t('certificates.batches.batchIssue.selectedTemplate')}</h3>
                 <p className="text-indigo-600 font-bold text-sm bg-indigo-50 px-4 py-1.5 rounded-full mb-6 italic">"{selectedTemplate?.name}"</p>
                 
                 <div className="w-full grid grid-cols-2 gap-3 mt-4">
                     <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Kích thước</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t('common.pageSize')}</p>
                         <p className="font-bold text-gray-700 uppercase">{selectedTemplate?.page_size}</p>
                     </div>
                     <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Hướng</p>
-                        <p className="font-bold text-gray-700 capitalize">{selectedTemplate?.orientation}</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{t('common.orientation')}</p>
+                        <p className="font-bold text-gray-700 capitalize">{selectedTemplate?.orientation === 'landscape' ? t('common.landscape') : t('common.portrait')}</p>
                     </div>
                 </div>
 
@@ -263,8 +266,8 @@ export default function BatchIssuePage() {
                             <Download size={24} />
                         </div>
                         <div className="text-center">
-                            <p className="text-sm font-bold text-emerald-700">Tải tệp mẫu (.xlsx)</p>
-                            <p className="text-xs text-emerald-600 font-medium mt-1">Sử dụng tệp này để nhập dữ liệu đúng định dạng.</p>
+                            <p className="text-sm font-bold text-emerald-700">{t('certificates.batches.batchIssue.downloadExcel')}</p>
+                            <p className="text-xs text-emerald-600 font-medium mt-1">{t('certificates.batches.batchIssue.downloadExcelSub')}</p>
                         </div>
                     </button>
                 </div>
@@ -274,12 +277,12 @@ export default function BatchIssuePage() {
                 <div className="absolute top-0 right-0 -translate-y-8 translate-x-8 w-32 h-32 bg-indigo-800 rounded-full blur-3xl opacity-50" />
                 <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider mb-4 opacity-80">
                     <AlertCircle size={16} />
-                    Lưu ý quan trọng
+                    {t('certificates.batches.batchIssue.importantNotes')}
                 </h4>
                 <div className="space-y-4 text-sm font-medium leading-relaxed">
-                    <p>• Dữ liệu hệ thống mặc định: <code className="bg-indigo-800 px-1.5 py-0.5 rounded">recipient_name</code>, <code className="bg-indigo-800 px-1.5 py-0.5 rounded">title</code>, <code className="bg-indigo-800 px-1.5 py-0.5 rounded">recipient_id</code>...</p>
-                    <p>• Các trường tùy chỉnh bắt đầu bằng <code className="bg-indigo-800 px-1.5 py-0.5 rounded">custom_</code> (ví dụ: <code className="bg-indigo-800 px-1.5 py-0.5 rounded">custom_score</code>)</p>
-                    <p>• Hệ thống hỗ trợ xử lý nền, bạn sẽ nhận được thông báo sau khi hoàn tất.</p>
+                    <p>• {t('certificates.batches.batchIssue.defaultFields', { fields: 'recipient_name, title, recipient_id...' })}</p>
+                    <p>• {t('certificates.batches.batchIssue.customFields', { prefix: 'custom_', example: 'custom_score' })}</p>
+                    <p>• {t('certificates.batches.batchIssue.backgroundProcessing')}</p>
                 </div>
             </div>
           </div>
@@ -289,27 +292,27 @@ export default function BatchIssuePage() {
               <div className="p-8 md:p-10 space-y-8 flex-1 overflow-y-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Tên đợt cấp phát <span className="text-red-500">*</span></label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">{t('certificates.batches.batchIssue.batchName')} <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             required
                             value={batchName}
                             onChange={(e) => setBatchName(e.target.value)}
-                            placeholder="v.d. Cấp GCN Khóa hè 2024"
+                            placeholder={t('certificates.batches.batchIssue.batchNamePlaceholder')}
                             className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 text-gray-900 font-bold focus:outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-sm"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Liên kết Quyết định (nếu có)</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">{t('certificates.batches.batchIssue.linkDecision')}</label>
                         <select
                             value={selectedDecisionId}
                             onChange={(e) => setSelectedDecisionId(e.target.value)}
                             className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 text-gray-900 font-bold focus:outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-sm appearance-none"
                         >
-                            <option value="">Không liên kết quyết định</option>
+                            <option value="">{t('certificates.batches.batchIssue.noDecision')}</option>
                             {decisions.map(d => (
-                                <option key={d.id} value={d.id}>{d.decision_number} ({new Date(d.decision_date).toLocaleDateString()})</option>
+                                <option key={d.id} value={d.id}>{d.decision_number} ({new Date(d.decision_date).toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US')})</option>
                             ))}
                         </select>
                     </div>
@@ -317,7 +320,7 @@ export default function BatchIssuePage() {
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 flex items-center gap-2">
                             <ListOrdered size={14} className="text-indigo-500" />
-                            Số thứ tự bắt đầu
+                            {t('certificates.batches.batchIssue.startNumber')}
                         </label>
                         <input
                             type="number"
@@ -326,23 +329,23 @@ export default function BatchIssuePage() {
                             onChange={(e) => setStartNumber(e.target.value)}
                             className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 text-gray-900 font-bold focus:outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-sm"
                         />
-                        <p className="text-xs text-gray-400 font-medium ml-1">Dùng để bổ sung vào "Số vào sổ" nếu trong tệp Excel để trống.</p>
+                        <p className="text-xs text-gray-400 font-medium ml-1">{t('certificates.batches.batchIssue.startNumberHint')}</p>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Mô tả thêm</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">{t('certificates.batches.batchIssue.description')}</label>
                         <input
                             type="text"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Ghi chú cho đợt cấp này..."
+                            placeholder={t('certificates.batches.batchIssue.descriptionPlaceholder')}
                             className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 text-gray-900 font-bold focus:outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-sm"
                         />
                     </div>
                 </div>
 
                 <div className="pt-8">
-                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 mb-3 block">Tệp dữ liệu Danh sách (.xlsx) <span className="text-red-500">*</span></label>
+                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 mb-3 block">{t('certificates.batches.batchIssue.dataFile')} <span className="text-red-500">*</span></label>
                      <div className={`relative border-3 border-dashed rounded-[2.5rem] transition-all duration-300 group flex flex-col items-center justify-center p-12 overflow-hidden ${file ? 'border-indigo-400 bg-indigo-50/30' : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50/50'}`}>
                         <input 
                             type="file" 
@@ -357,8 +360,8 @@ export default function BatchIssuePage() {
                                     <Upload size={36} className="text-indigo-600" />
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-xl font-bold text-gray-900 mb-1">Kéo thả hoặc Nhấn để chọn tệp</p>
-                                    <p className="text-sm font-medium text-gray-500">Chỉ chấp nhận tệp Excel (.xlsx, .xls)</p>
+                                    <p className="text-xl font-bold text-gray-900 mb-1">{t('certificates.batches.batchIssue.uploadHint')}</p>
+                                    <p className="text-sm font-medium text-gray-500">{t('certificates.batches.batchIssue.uploadSub')}</p>
                                 </div>
                             </>
                         ) : (
@@ -375,7 +378,7 @@ export default function BatchIssuePage() {
                                             onClick={(e) => { e.preventDefault(); setFile(null); }}
                                             className="text-xs font-bold text-red-500 uppercase tracking-widest hover:text-red-700 transition-colors pointer-events-auto relative z-20"
                                         >
-                                            Xóa tệp
+                                            {t('certificates.batches.batchIssue.removeFile')}
                                         </button>
                                     </div>
                                 </div>
@@ -394,12 +397,12 @@ export default function BatchIssuePage() {
                     {isSubmitting ? (
                         <>
                             <Loader2 className="animate-spin" size={24} />
-                            Đang xử lý dữ liệu...
+                            {t('certificates.batches.batchIssue.processing')}
                         </>
                     ) : (
                         <>
                             <CheckCircle2 size={24} />
-                            Bắt đầu cấp phát hàng loạt
+                            {t('certificates.batches.batchIssue.startBatch')}
                         </>
                     )}
                 </button>
@@ -419,8 +422,8 @@ export default function BatchIssuePage() {
                       </div>
                   </div>
                   <div>
-                      <h4 className="text-2xl font-bold text-gray-900 mb-2">Đang khởi tạo đợt cấp</h4>
-                      <p className="text-gray-500 font-medium">Hệ thống đang tải dữ liệu lên và chuẩn bị xử lý hàng loạt. Quá trình này có thể mất vài phút.</p>
+                      <h4 className="text-2xl font-bold text-gray-900 mb-2">{t('certificates.batches.batchIssue.initializing')}</h4>
+                      <p className="text-gray-500 font-medium">{t('certificates.batches.batchIssue.initializingSub')}</p>
                   </div>
               </div>
           </div>

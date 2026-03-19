@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { Layout, ChevronRight, Search, Award, Loader2, ArrowLeft, FileText } from 'lucide-react';
+import { Layout as LayoutIcon, ChevronRight, Search, Award, Loader2, ArrowLeft, FileText } from 'lucide-react';
 import { getFullUrl } from '@/utils/url';
 import VisualBuilder, { BuilderElement, TemplateMetadata } from '@/components/builder/VisualBuilder';
+import { useTranslation } from 'react-i18next';
 
 interface Template {
   id: string;
@@ -18,6 +19,7 @@ interface Template {
 }
 
 export default function IssueSinglePage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [step, setStep] = useState<'select-template' | 'edit-data'>('select-template');
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -75,11 +77,9 @@ export default function IssueSinglePage() {
           if (el.is_variable) {
             variableData[el.key] = el.content || "";
           } else if (el.content?.includes('{{')) {
-            // Extract placeholders from the content and use the runtime value from runtime_values map
             const matches = el.content.match(/\{\{([^{}]+)\}\}/g);
             matches?.forEach(m => {
               const key = m.replace(/[{}]/g, '').trim();
-              // If we have a stored value for this placeholder in this element, use it
               if (el.runtime_values?.[key]) {
                 variableData[key] = el.runtime_values[key];
               }
@@ -88,10 +88,8 @@ export default function IssueSinglePage() {
         }
       });
 
-      // Heuristic to find recipient_name and title
       const keys = Object.keys(variableData);
       
-      // Try to find recipient_name
       let recipientName = "";
       const nameKey = keys.find(k => 
         ['recipient_name', 'name', 'fullname', 'full_name', 'họ tên', 'họ và tên'].includes(k.toLowerCase())
@@ -99,13 +97,12 @@ export default function IssueSinglePage() {
       if (nameKey) {
         recipientName = variableData[nameKey];
       } else if (keys.length > 0) {
-        recipientName = variableData[keys[0]]; // Fallback to first variable
+        recipientName = variableData[keys[0]];
       } else {
-        recipientName = "Recipient"; // Last resort
+        recipientName = "Recipient";
       }
 
-      // Try to find title
-      let title = selectedTemplate.name; // Default to template name
+      let title = selectedTemplate.name;
       const titleKey = keys.find(k => 
         ['title', 'subject', 'course', 'tiêu đề', 'về việc'].includes(k.toLowerCase())
       );
@@ -113,11 +110,9 @@ export default function IssueSinglePage() {
         title = variableData[titleKey];
       }
 
-      // Map other optional fields
       const emailKey = keys.find(k => k.toLowerCase().includes('email'));
       const idKey = keys.find(k => ['recipient_id', 'student_id', 'employee_id', 'id'].includes(k.toLowerCase()));
 
-      // API call to issue single certificate
       await api.post('/certificates', {
         template_id: selectedTemplate.id,
         recipient_name: recipientName,
@@ -126,13 +121,13 @@ export default function IssueSinglePage() {
         title: title,
         decision_id: selectedDecisionId || undefined,
         registry_number: registryNumber || undefined,
-        custom_data: variableData // Include everything in custom_data as well for the PDF engine
+        custom_data: variableData
       });
 
       router.push('/certificates');
     } catch (error) {
       console.error("Failed to issue certificate", error);
-      alert("Failed to issue certificate. Please check if all fields are filled.");
+      alert(t('common.error') || "Failed to issue certificate.");
     } finally {
       setIsSubmitting(false);
     }
@@ -144,33 +139,32 @@ export default function IssueSinglePage() {
   );
 
   return (
-    <div className="flex flex-col gap-6 h-full">
-      {/* Header & Stepper */}
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex-shrink-0">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+    <div className="flex flex-col gap-8 h-full animate-in fade-in duration-700">
+      <div className="bg-card p-6 rounded-2xl border border-border shadow-sm flex-shrink-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-5">
             <button 
               onClick={() => step === 'edit-data' ? setStep('select-template') : router.back()}
-              className="p-2.5 hover:bg-gray-50 rounded-xl transition-colors border border-gray-100 text-gray-600 shadow-sm"
+              className="p-3 hover:bg-accent rounded-xl transition-all border border-border text-muted-foreground shadow-sm group"
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             </button>
             <div>
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                    {step === 'select-template' ? 'Issue Single Certificate' : 'Certificate Details'}
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                    {step === 'select-template' ? t('certificates.issue.singleTitle') : t('certificates.issue.details')}
                 </h1>
-                <p className="text-sm text-gray-500">
-                    {step === 'select-template' ? 'Step 1: Select a template design' : `Step 2: Fill information for ${selectedTemplate?.name}`}
+                <p className="text-sm text-muted-foreground mt-1">
+                    {step === 'select-template' ? t('certificates.issue.step1') : `${t('certificates.issue.step2')} ${selectedTemplate?.name}`}
                 </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition-colors ${step === 'select-template' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-green-100 text-green-700'}`}>
-                  {step === 'select-template' ? '1' : <Award size={16} />}
+          <div className="flex items-center gap-3">
+              <div className={`flex items-center justify-center w-10 h-10 rounded-xl text-xs font-bold transition-all ${step === 'select-template' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
+                  {step === 'select-template' ? '1' : <Award size={18} />}
               </div>
-              <div className={`w-8 h-0.5 rounded-full ${step === 'edit-data' ? 'bg-green-200' : 'bg-gray-100'}`} />
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition-colors ${step === 'edit-data' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-gray-100 text-gray-400'}`}>
+              <div className={`w-10 h-1 rounded-full ${step === 'edit-data' ? 'bg-emerald-500/30' : 'bg-muted'}`} />
+              <div className={`flex items-center justify-center w-10 h-10 rounded-xl text-xs font-bold transition-all ${step === 'edit-data' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110' : 'bg-muted text-muted-foreground'}`}>
                   2
               </div>
           </div>
@@ -180,38 +174,38 @@ export default function IssueSinglePage() {
       {step === 'select-template' ? (
         <div className="flex-1 space-y-6">
           <div className="relative max-w-md group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input
               type="text"
-              placeholder="Search templates..."
+              placeholder={t('certificates.issue.searchTemplates')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 text-sm rounded-2xl border border-gray-200 focus:outline-[3px] focus:outline-indigo-50/50 focus:border-indigo-500 transition-all bg-white shadow-sm"
+              className="w-full pl-11 pr-4 py-3 text-sm rounded-2xl border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-card shadow-sm outline-none"
             />
           </div>
 
           {loading ? (
-             <div className="py-24 flex flex-col items-center justify-center gap-4 text-gray-400">
-                <Loader2 size={32} className="animate-spin text-indigo-500" />
-                <span className="text-sm font-medium">Fetching active templates...</span>
+             <div className="py-32 flex flex-col items-center justify-center gap-4 text-muted-foreground">
+                <Loader2 size={40} className="animate-spin text-primary opacity-50" />
+                <span className="text-sm font-bold tracking-widest uppercase">{t('common.fetchingData')}</span>
              </div>
           ) : filteredTemplates.length === 0 ? (
-            <div className="py-24 text-center border-2 border-dashed border-gray-200 rounded-3xl bg-white/50 backdrop-blur-sm">
-              <div className="bg-gray-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Layout className="h-8 w-8 text-gray-400" />
+            <div className="py-24 text-center border-2 border-dashed border-border rounded-3xl bg-card/50 backdrop-blur-sm">
+              <div className="bg-accent w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <LayoutIcon className="h-10 w-10 text-muted-foreground/40" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">No active templates found</h3>
-              <p className="mt-1 text-sm text-gray-500">Enable or create templates to start issuing certificates.</p>
+              <h3 className="text-xl font-bold text-foreground">{t('certificates.issue.noActiveTemplates')}</h3>
+              <p className="mt-2 text-muted-foreground max-w-sm mx-auto">{t('certificates.issue.enableTemplates')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
               {filteredTemplates.map((tmpl) => (
                 <div 
                   key={tmpl.id} 
                   onClick={() => handleTemplateSelect(tmpl)}
-                  className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/5 transition-all group cursor-pointer flex flex-col"
+                  className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden hover:border-primary hover:shadow-2xl hover:shadow-primary/5 transition-all group cursor-pointer flex flex-col"
                 >
-                  <div className="h-48 bg-gray-50 flex items-center justify-center border-b border-gray-50 relative overflow-hidden">
+                  <div className="h-52 bg-accent/30 flex items-center justify-center border-b border-border relative overflow-hidden">
                     {tmpl.background_url ? (
                       <img 
                         src={getFullUrl(tmpl.background_url)} 
@@ -219,23 +213,23 @@ export default function IssueSinglePage() {
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                     ) : (
-                      <div className="flex flex-col items-center gap-2 opacity-30">
-                        <Layout className="h-12 w-12 text-gray-400" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Template</span>
+                      <div className="flex flex-col items-center gap-2 opacity-20">
+                        <LayoutIcon className="h-14 w-14 text-muted-foreground" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">{t('common.templates')}</span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-indigo-900/0 group-hover:bg-indigo-900/10 transition-colors duration-300 flex items-center justify-center">
-                        <div className="bg-white text-indigo-600 w-12 h-12 rounded-full flex items-center justify-center shadow-xl transform translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                           <ChevronRight size={24} />
+                    <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300 flex items-center justify-center">
+                        <div className="bg-card text-primary w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transform translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 border border-border/50">
+                           <ChevronRight size={28} />
                         </div>
                     </div>
                   </div>
-                  <div className="p-5 flex-1 flex flex-col gap-1">
-                    <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest leading-none mb-1">{tmpl.category || 'General'}</p>
-                    <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{tmpl.name}</h3>
-                    <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 font-bold uppercase">{tmpl.page_size}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 font-bold uppercase capitalize">{tmpl.orientation}</span>
+                  <div className="p-6 flex-1 flex flex-col gap-2">
+                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{tmpl.category || t('common.general')}</p>
+                    <h3 className="text-lg font-bold text-foreground line-clamp-2 leading-tight">{tmpl.name}</h3>
+                    <div className="flex items-center gap-2 mt-auto pt-4">
+                        <span className="text-[10px] px-2.5 py-1 rounded-lg bg-accent text-accent-foreground font-bold uppercase border border-border/50">{tmpl.page_size}</span>
+                        <span className="text-[10px] px-2.5 py-1 rounded-lg bg-accent text-accent-foreground font-bold uppercase border border-border/50">{t(`common.${tmpl.orientation.toLowerCase()}` as any)}</span>
                     </div>
                   </div>
                 </div>
@@ -244,9 +238,8 @@ export default function IssueSinglePage() {
           )}
         </div>
       ) : (
-        /* Edit Data Step with VisualBuilder */
-        <div className="flex-1 flex flex-col gap-6 overflow-hidden">
-          <div className="flex-1 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl relative">
+        <div className="flex-1 flex flex-col gap-6 overflow-hidden pb-12">
+          <div className="flex-1 overflow-hidden rounded-3xl border border-border bg-card shadow-2xl relative">
             {selectedTemplate && (
               <VisualBuilder 
                   initialLayout={selectedTemplate.layout_json}
@@ -274,11 +267,16 @@ export default function IssueSinglePage() {
     )}
 
       {isSubmitting && (
-          <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-[2px] flex items-center justify-center">
-              <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-3">
-                  <Loader2 size={32} className="animate-spin text-indigo-600" />
-                  <span className="font-bold text-gray-900">Generating Certificate...</span>
-                  <p className="text-xs text-gray-500">This may take a few moments.</p>
+          <div className="fixed inset-0 z-[100] bg-background/60 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-300">
+              <div className="bg-card p-10 rounded-3xl shadow-2xl border border-border flex flex-col items-center gap-6 max-w-xs text-center">
+                  <div className="relative">
+                      <div className="absolute inset-0 bg-primary/20 blur-2xl animate-pulse" />
+                      <Loader2 size={48} className="animate-spin text-primary relative z-10" />
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-xl font-bold text-foreground block">{t('certificates.issue.generating')}</span>
+                    <p className="text-sm text-muted-foreground">{t('certificates.issue.moments')}</p>
+                  </div>
               </div>
           </div>
       )}

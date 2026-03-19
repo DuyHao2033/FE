@@ -5,10 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import VisualBuilder from '@/components/builder/VisualBuilder';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function TemplateBuilderPage() {
   const params = useParams();
   const router = useRouter();
+  const { t } = useTranslation();
   const id = params.id as string;
   const [template, setTemplate] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -67,18 +69,18 @@ export default function TemplateBuilderPage() {
         orientation: metadata.orientation,
         certificate_type_id: metadata.certificate_type_id || null
       });
-      alert("Template saved successfully!");
+      alert(t('builder.saveSuccess'));
       router.push('/templates');
     } catch (error) {
       console.error("Failed to save template:", error);
-      alert("Error saving template. Check console.");
+      alert(t('common.error'));
     } finally {
       setIsSaving(false);
     }
   };
 
   if (loading) return <div className="p-12 text-center flex justify-center"><Loader2 className="animate-spin text-indigo-600" /></div>;
-  if (!template) return <div className="p-12 text-center text-red-500">Template not found</div>;
+  if (!template) return <div className="p-12 text-center text-red-500">{t('builder.notFound')}</div>;
 
   return (
     <div className="flex flex-col h-full relative">
@@ -86,7 +88,7 @@ export default function TemplateBuilderPage() {
         <div className="absolute inset-0 z-50 bg-white/50 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-4">
             <Loader2 className="animate-spin text-indigo-600 h-8 w-8" />
-            <p className="font-medium text-gray-700">Saving changes...</p>
+            <p className="font-medium text-gray-700">{t('builder.saving')}</p>
           </div>
         </div>
       )}
@@ -96,8 +98,8 @@ export default function TemplateBuilderPage() {
                 <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900">Edit Template: {template.name}</h1>
-              <p className="text-sm text-gray-500">Change template details or design your certificate structure.</p>
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900">{t('builder.editTemplate', { name: template.name })}</h1>
+              <p className="text-sm text-gray-500">{t('builder.editSubtitle')}</p>
             </div>
         </div>
       </div>
@@ -106,7 +108,7 @@ export default function TemplateBuilderPage() {
         <VisualBuilder 
             initialMetadata={{
               name: template.name || '',
-              category: template.category || 'General',
+              category: template.category || t('common.general'),
               page_size: template.page_size || 'A4',
               orientation: template.orientation || 'landscape',
               certificate_type_id: template.certificate_type_id || ''
