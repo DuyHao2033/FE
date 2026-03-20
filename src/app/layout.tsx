@@ -4,6 +4,7 @@ import React from 'react';
 import './globals.css';
 import { AuthProvider } from '@/components/AuthProvider';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export default function RootLayout({
   children,
@@ -19,9 +20,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </GoogleOAuthProvider>
         </ThemeProvider>
       </body>
     </html>
