@@ -53,7 +53,7 @@ export default function FontsPage() {
         document.head.appendChild(styleEl);
       }
       
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'https://api.siu.edu.vn/certificate';
       const fontRules = fonts.map(f => `
         @font-face {
           font-family: '${f.name}';

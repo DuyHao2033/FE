@@ -93,10 +93,22 @@ export default function DashboardLayout({
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar */}
       <aside className="w-64 bg-card border-r border-border flex flex-col hidden md:flex transition-colors duration-300">
-        <div className="h-16 flex items-center px-6 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-          <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">
-            SIU Certs
-          </span>
+        <div className="h-16 flex items-center px-6 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 overflow-hidden">
+          <Link href="/" className="flex items-center gap-3">
+            <img 
+              src="/certificate/logo.png" 
+              alt="Logo" 
+              className="h-9 w-auto object-contain dark:brightness-110"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+                const fallback = (e.target as HTMLImageElement).nextElementSibling;
+                if (fallback) fallback.classList.remove('hidden');
+              }}
+            />
+            <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent hidden">
+              SIU Certs
+            </span>
+          </Link>
         </div>
 
         <nav className="flex-1 px-4 py-4 space-y-6 overflow-y-auto scrollbar-thin scrollbar-thumb-border">

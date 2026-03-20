@@ -250,7 +250,8 @@
     "editSubtitle": "Change template details or design your certificate structure.",
     "saving": "Saving changes...",
     "saveSuccess": "Template saved successfully!",
-    "notFound": "Template not found"
+    "notFound": "Template not found",
+    "issueHint": "Double-check the info to ensure it matches the design on the right before issuing."
   },
   "auth": {
     "login": "Login",

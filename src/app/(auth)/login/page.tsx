@@ -10,6 +10,7 @@ import { Award, Lock, Mail, Loader2 } from 'lucide-react';
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   const { login } = useAuthStore();
   const router = useRouter();
 
@@ -52,8 +53,19 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
         <div className="p-8 pb-6 border-b border-gray-50 flex flex-col items-center">
-            <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-6 shadow-inner">
-                <Award className="w-8 h-8 text-indigo-600" />
+            <div className="mb-6 flex items-center justify-center p-2">
+                {!logoError ? (
+                  <img 
+                    src="/certificate/logo.png" 
+                    alt="SIU Logo" 
+                    className="h-20 w-auto object-contain"
+                    onError={() => setLogoError(true)}
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center shadow-inner">
+                      <Award className="w-8 h-8 text-indigo-600" />
+                  </div>
+                )}
             </div>
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">SIU Digital Certificate</h1>
             <p className="text-gray-500 mt-2 text-sm text-center">Sign in to manage and issue digital certificates.</p>

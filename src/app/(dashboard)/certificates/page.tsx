@@ -167,7 +167,7 @@ export default function CertificatesPage() {
                           </td>
                           <td className="whitespace-nowrap py-5 pl-3 pr-6 text-right text-sm font-medium flex justify-end gap-3">
                              <a 
-                                href={cert.pdf_url ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1','') || 'http://localhost:8000'}${cert.pdf_url}` : '#'}
+                                href={cert.pdf_url ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1','') || 'https://api.siu.edu.vn/certificate'}${cert.pdf_url}` : '#'}
                                 target="_blank"
                                 rel="noreferrer"
                                 className={`inline-flex items-center gap-2 text-foreground bg-accent/50 hover:bg-accent px-4 py-2 rounded-xl transition-all duration-200 border border-border/50 font-bold group ${!cert.pdf_url && 'opacity-30 pointer-events-none'}`}

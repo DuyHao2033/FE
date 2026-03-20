@@ -162,7 +162,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
         document.head.appendChild(styleEl);
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'https://api.siu.edu.vn/certificate';
       const fontRules = availableFonts.map(f => `
         @font-face {
           font-family: '${f}';
@@ -192,7 +192,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
     const updateScale = () => {
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect();
-        const padding = 64; // p-8 * 2
+        const padding = 48; // p-6 * 2
         const availableWidth = width - padding;
         const availableHeight = height - padding;
 
@@ -206,9 +206,15 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
     };
 
     updateScale();
+    // Extra update after a short delay to ensure layout has settled (especially for tabs/transitions)
+    const timer = setTimeout(updateScale, 100);
+
     window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
-  }, [canvasWidth, canvasHeight, metadata.orientation]);
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      clearTimeout(timer);
+    };
+  }, [canvasWidth, canvasHeight, metadata.orientation, mode]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const editInputRef = useRef<HTMLTextAreaElement>(null);
@@ -327,7 +333,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
   };
 
   return (
-    <div className="relative flex flex-1 min-h-0 bg-muted/30 border border-border mt-1 rounded-2xl overflow-hidden shadow-sm">
+    <div className="relative flex flex-1 h-full min-h-0 bg-muted/30 border border-border rounded-2xl overflow-hidden shadow-sm">
       {/* Sidebar */}
       <div className="w-80 bg-card border-r border-border flex flex-col z-10 text-foreground">
 
@@ -450,8 +456,8 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                           <label className="block text-[10px] font-bold text-muted-foreground mb-1.5 uppercase tracking-widest flex items-center gap-1.5">
                             <span className={`w-1.5 h-1.5 rounded-full ${isCore ? 'bg-primary' : 'bg-emerald-500'}`}></span>
                             {input.label}
-                            {isCore && <span className="text-[8px] bg-primary/10 text-primary px-1.5 rounded ml-auto font-black">{t('common.required')}</span>}
-                            {!isCore && input.elId && <span className="text-[8px] bg-emerald-500/10 text-emerald-600 px-1.5 rounded ml-auto font-black">{t('common.inDesign')}</span>}
+                            {isCore && <span className="text-[8px] bg-primary/10 text-primary px-1.5 rounded ml-auto">{t('common.required')}</span>}
+                            {!isCore && input.elId && <span className="text-[8px] bg-emerald-500/10 text-emerald-600 px-1.5 rounded ml-auto">{t('common.inDesign')}</span>}
                           </label>
                           <input
                             type="text"
@@ -850,27 +856,27 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                               {t('builder.changeImage')}
                             </button>
                           </div>
-                                       <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.width')}</label>
-                            <input
-                              type="number"
-                              value={activeElement.width}
-                              onChange={(e) => handleUpdateActive({ width: parseInt(e.target.value) })}
-                              className="w-full text-sm border-border rounded-lg p-2 border bg-card text-foreground outline-none transition-all"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.height')}</label>
-                            <input
-                              type="number"
-                              value={activeElement.height}
-                              onChange={(e) => handleUpdateActive({ height: parseInt(e.target.value) })}
-                              className="w-full text-sm border-border rounded-lg p-2 border bg-card text-foreground outline-none transition-all"
-                            />
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.width')}</label>
+                              <input
+                                type="number"
+                                value={activeElement.width}
+                                onChange={(e) => handleUpdateActive({ width: parseInt(e.target.value) })}
+                                className="w-full text-sm border-border rounded-lg p-2 border bg-card text-foreground outline-none transition-all"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.height')}</label>
+                              <input
+                                type="number"
+                                value={activeElement.height}
+                                onChange={(e) => handleUpdateActive({ height: parseInt(e.target.value) })}
+                                className="w-full text-sm border-border rounded-lg p-2 border bg-card text-foreground outline-none transition-all"
+                              />
+                            </div>
                           </div>
                         </div>
-          </div>
                       </div>
                     )}
 
@@ -903,7 +909,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
           {onSave && (
             <button
               onClick={() => onSave && onSave({ elements }, metadata, bgFile)}
-              className="w-full bg-primary text-primary-foreground px-5 py-4 rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center gap-2.5 hover:opacity-90 transform active:scale-95 transition-all font-black text-xs uppercase tracking-widest"
+              className="w-full bg-primary text-primary-foreground px-5 py-4 rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center gap-2.5 hover:opacity-90 transform active:scale-95 transition-all font-bold text-xs uppercase tracking-widest"
             >
               {mode === 'issue' ? (
                 <>
@@ -926,143 +932,151 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
         </div>
       </div>
 
-      {/* Main Canvas Area */}
       <div
         ref={containerRef}
-        className="flex-1 bg-muted/20 overflow-hidden relative flex items-center justify-center p-8 backdrop-blur-[2px]"
+        className="flex-1 bg-muted/20 overflow-hidden relative flex items-center justify-center p-6 backdrop-blur-[2px]"
         onClick={() => { setSelectedId(null); setEditingId(null); }}
       >
-        {/* The Document Canvas */}
+        {/* wrapper for the scaled canvas to ensure correct flex centering */}
         <div
-          className="relative bg-white shadow-2xl transition-all duration-300 ease-in-out flex-shrink-0"
           style={{
-            width: canvasWidth,
-            height: canvasHeight,
-            minWidth: canvasWidth,
-            minHeight: canvasHeight,
-            backgroundImage: previewBg ? `url(${previewBg})` : 'none',
-            backgroundSize: '100% 100%',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            transform: `scale(${currentScale})`,
-            transformOrigin: 'center center',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+            width: canvasWidth * currentScale,
+            height: canvasHeight * currentScale,
+            position: 'relative',
+            flexShrink: 0
           }}
-          onClick={(e) => e.stopPropagation()}
+          className="transition-all duration-300 ease-in-out"
         >
-          {elements.map((el) => {
-            const isSelected = selectedId === el.id;
+          {/* The Document Canvas */}
+          <div
+            className="absolute top-1/2 left-1/2 bg-white shadow-2xl transition-all duration-300 ease-in-out flex-shrink-0"
+            style={{
+              width: canvasWidth,
+              height: canvasHeight,
+              transform: `translate(-50%, -50%) scale(${currentScale})`,
+              transformOrigin: 'center center',
+              backgroundImage: previewBg ? `url(${previewBg})` : 'none',
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {elements.map((el) => {
+              const isSelected = selectedId === el.id;
 
-            return (
-              <Rnd
-                key={el.id}
-                scale={currentScale}
-                size={{
-                  width: el.width || (el.type === 'qr' ? (el.size || 80) : 'auto'),
-                  height: el.height || (el.type === 'qr' ? (el.size || 80) : 'auto')
-                }}
-                position={{ x: el.x, y: el.y }}
-                bounds="parent"
-                dragHandleClassName={isSelected && editingId !== el.id ? "drag-handle" : undefined}
-                onDragStop={(e, d) => {
-                  setElements(elements.map(item => item.id === el.id ? { ...item, x: d.x, y: d.y } : item));
-                }}
-                onResizeStop={(e, direction, ref, delta, position) => {
-                  setElements(elements.map(item => item.id === el.id ? {
-                    ...item,
-                    width: parseInt(ref.style.width),
-                    height: parseInt(ref.style.height),
-                    ...position
-                  } : item));
-                }}
-                onMouseDown={() => setSelectedId(el.id)}
-                onDoubleClick={() => {
-                  if (el.type === 'text' && mode === "builder") setEditingId(el.id);
-                }}
-                disableDragging={mode === "issue"}
-                enableResizing={mode === "builder" && editingId !== el.id && (el.type === 'text' || el.type === 'image')}
-                lockAspectRatio={el.type === 'image'}
-                className={`${isSelected ? 'ring-2 ring-primary ring-offset-4' : 'hover:ring-1 hover:ring-primary/40 border border-dashed border-transparent hover:border-primary/50'}`}
-                style={{
-                  zIndex: isSelected ? 50 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: el.align === 'left' ? 'flex-start' : el.align === 'right' ? 'flex-end' : 'center',
-                }}
-              >
-                {el.type === 'text' ? (
-                  <div
-                    className={`w-full h-full drag-handle flex items-center ${el.align === 'left' ? 'justify-start' : el.align === 'right' ? 'justify-end' : 'justify-center'}`}
-                    style={{
-                      fontFamily: el.font,
-                      fontSize: `${(el.font_size || 24)}px`,
-                      color: `rgb(${el.color?.[0] || 0}, ${el.color?.[1] || 0}, ${el.color?.[2] || 0})`,
-                      textAlign: el.align,
-                      fontWeight: el.bold ? 'bold' : 'normal',
-                      fontStyle: el.italic ? 'italic' : 'normal',
-                      textDecoration: el.underline ? 'underline' : 'none',
-                      width: '100%',
-                      wordBreak: 'break-word',
-                      lineHeight: 1.2,
-                      padding: '4px',
-                      cursor: isSelected ? 'move' : 'pointer'
-                    }}
-                  >
-                    {editingId === el.id ? (
-                      <textarea
-                        ref={editInputRef}
-                        value={el.content || ""}
-                        onChange={(e) => handleUpdateActive({ content: e.target.value })}
-                        onBlur={() => setEditingId(null)}
-                        className="bg-transparent border-0 outline-none w-full h-full p-0 m-0 overflow-hidden resize-none"
-                        style={{
-                          textAlign: el.align,
-                          fontFamily: 'inherit',
-                          fontSize: 'inherit',
-                          fontWeight: 'inherit',
-                          fontStyle: 'inherit',
-                          color: 'inherit'
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full">
-                        {renderBeautifiedContent(el)}
-                      </div>
-                    )}
-                  </div>
-                ) : el.type === 'image' ? (
-                  <div className="w-full h-full relative group drag-handle">
-                    {el.src ? (
-                      <img
-                        src={getFullUrl(el.src)}
-                        alt="Asset"
-                        className="w-full h-full object-contain pointer-events-none"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-accent/50 flex items-center justify-center border-2 border-dashed border-border rounded-lg pointer-events-none">
-                        <ImageIcon className="text-muted-foreground/30" size={32} />
-                      </div>
-                    )}
-                    {isSelected && (
-                      <div className="absolute top-0 right-0 p-1 bg-primary text-primary-foreground rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                        <GripHorizontal size={14} />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div
-                    className="bg-card/90 flex items-center justify-center border-2 border-dashed border-border rounded-xl shadow-lg drag-handle backdrop-blur-sm"
-                    style={{
-                      width: `${el.size || 80}px`,
-                      height: `${el.size || 80}px`
-                    }}
-                  >
-                    <QrCode size={Math.max(20, (el.size || 80) / 2)} className="text-muted-foreground" />
-                  </div>
-                )}
-              </Rnd>
-            );
-          })}
+              return (
+                <Rnd
+                  key={el.id}
+                  scale={currentScale}
+                  size={{
+                    width: el.width || (el.type === 'qr' ? (el.size || 80) : 'auto'),
+                    height: el.height || (el.type === 'qr' ? (el.size || 80) : 'auto')
+                  }}
+                  position={{ x: el.x, y: el.y }}
+                  bounds="parent"
+                  dragHandleClassName={isSelected && editingId !== el.id ? "drag-handle" : undefined}
+                  onDragStop={(e, d) => {
+                    setElements(elements.map(item => item.id === el.id ? { ...item, x: d.x, y: d.y } : item));
+                  }}
+                  onResizeStop={(e, direction, ref, delta, position) => {
+                    setElements(elements.map(item => item.id === el.id ? {
+                      ...item,
+                      width: parseInt(ref.style.width),
+                      height: parseInt(ref.style.height),
+                      ...position
+                    } : item));
+                  }}
+                  onMouseDown={() => setSelectedId(el.id)}
+                  onDoubleClick={() => {
+                    if (el.type === 'text' && mode === "builder") setEditingId(el.id);
+                  }}
+                  disableDragging={mode === "issue"}
+                  enableResizing={mode === "builder" && editingId !== el.id && (el.type === 'text' || el.type === 'image')}
+                  lockAspectRatio={el.type === 'image'}
+                  className={`${isSelected ? 'ring-2 ring-primary ring-offset-4' : 'hover:ring-1 hover:ring-primary/40 border border-dashed border-transparent hover:border-primary/50'}`}
+                  style={{
+                    zIndex: isSelected ? 50 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: el.align === 'left' ? 'flex-start' : el.align === 'right' ? 'flex-end' : 'center',
+                  }}
+                >
+                  {el.type === 'text' ? (
+                    <div
+                      className={`w-full h-full drag-handle flex items-center ${el.align === 'left' ? 'justify-start' : el.align === 'right' ? 'justify-end' : 'justify-center'}`}
+                      style={{
+                        fontFamily: el.font,
+                        fontSize: `${(el.font_size || 24)}px`,
+                        color: `rgb(${el.color?.[0] || 0}, ${el.color?.[1] || 0}, ${el.color?.[2] || 0})`,
+                        textAlign: el.align,
+                        fontWeight: el.bold ? 'bold' : 'normal',
+                        fontStyle: el.italic ? 'italic' : 'normal',
+                        textDecoration: el.underline ? 'underline' : 'none',
+                        width: '100%',
+                        wordBreak: 'break-word',
+                        lineHeight: 1.2,
+                        padding: '4px',
+                        cursor: isSelected ? 'move' : 'pointer'
+                      }}
+                    >
+                      {editingId === el.id ? (
+                        <textarea
+                          ref={editInputRef}
+                          value={el.content || ""}
+                          onChange={(e) => handleUpdateActive({ content: e.target.value })}
+                          onBlur={() => setEditingId(null)}
+                          className="bg-transparent border-0 outline-none w-full h-full p-0 m-0 overflow-hidden resize-none"
+                          style={{
+                            textAlign: el.align,
+                            fontFamily: 'inherit',
+                            fontSize: 'inherit',
+                            fontWeight: 'inherit',
+                            fontStyle: 'inherit',
+                            color: 'inherit'
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full">
+                          {renderBeautifiedContent(el)}
+                        </div>
+                      )}
+                    </div>
+                  ) : el.type === 'image' ? (
+                    <div className="w-full h-full relative group drag-handle">
+                      {el.src ? (
+                        <img
+                          src={getFullUrl(el.src)}
+                          alt="Asset"
+                          className="w-full h-full object-contain pointer-events-none"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-accent/50 flex items-center justify-center border-2 border-dashed border-border rounded-lg pointer-events-none">
+                          <ImageIcon className="text-muted-foreground/30" size={32} />
+                        </div>
+                      )}
+                      {isSelected && (
+                        <div className="absolute top-0 right-0 p-1 bg-primary text-primary-foreground rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          <GripHorizontal size={14} />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      className="bg-card/90 flex items-center justify-center border-2 border-dashed border-border rounded-xl shadow-lg drag-handle backdrop-blur-sm"
+                      style={{
+                        width: `${el.size || 80}px`,
+                        height: `${el.size || 80}px`
+                      }}
+                    >
+                      <QrCode size={Math.max(20, (el.size || 80) / 2)} className="text-muted-foreground" />
+                    </div>
+                  )}
+                </Rnd>
+              );
+            })}
+          </div>
         </div>
       </div>
 

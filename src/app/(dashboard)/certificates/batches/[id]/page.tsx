@@ -215,7 +215,7 @@ export default function BatchDetailPage() {
                       <div className="flex items-center gap-2">
                         {cert.pdf_url ? (
                           <a
-                            href={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000'}${cert.pdf_url}`}
+                            href={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'https://api.siu.edu.vn/certificate'}${cert.pdf_url}`}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition-colors"

@@ -250,7 +250,8 @@
     "editSubtitle": "Thay đổi thông tin hoặc thiết kế cấu trúc chứng chỉ của bạn.",
     "saving": "Đang lưu thay đổi...",
     "saveSuccess": "Đã lưu mẫu thành công!",
-    "notFound": "Không tìm thấy mẫu"
+    "notFound": "Không tìm thấy mẫu",
+    "issueHint": "Kiểm tra kỹ thông tin xem đã khớp với mẫu thiết kế bên phải chưa trước khi bấm cấp phát."
   },
   "auth": {
     "login": "Đăng nhập",

@@ -14,7 +14,9 @@ import {
   ShieldAlert,
   ShieldCheck,
   TriangleAlert,
+  ArrowLeft,
 } from "lucide-react";
+import Link from "next/link";
 
 type VerifyResponse = {
   is_valid?: boolean;
@@ -87,7 +89,7 @@ function formatExpiryDate(value?: string | null) {
 }
 
 function getApiOrigin() {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://192.168.1.250:8065/api/v1";
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://api.siu.edu.vn/certificate/api/v1";
   return apiBase.replace(/\/api\/v1\/?$/, "");
 }
 
@@ -117,7 +119,7 @@ function getPdfUrl(data?: VerifyResponse | null) {
 
 function getFallbackPdfUrl(data?: VerifyResponse | null) {
   if (!data?.cert_id) return null;
-  return `${process.env.NEXT_PUBLIC_API_URL || "http://192.168.1.250:8065/api/v1"}/certificates/${data.cert_id}/pdf`;
+  return `${process.env.NEXT_PUBLIC_API_URL || "https://api.siu.edu.vn/certificate/api/v1"}/certificates/${data.cert_id}/pdf`;
 }
 
 function formatDisplayValue(value: unknown) {
@@ -289,6 +291,7 @@ export default function VerifyPage() {
   const [data, setData] = useState<VerifyResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState(false);
   const [pdfPreview, setPdfPreview] = useState<PdfPreviewState>({
     status: "loading",
     url: null,
@@ -473,6 +476,7 @@ export default function VerifyPage() {
             await page.render({
               canvasContext: context,
               viewport,
+              canvas: canvas,
             }).promise;
           })(),
         );
@@ -527,6 +531,15 @@ export default function VerifyPage() {
           <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
             Please check the certificate code again or contact the issuing organization.
           </div>
+          <div className="pt-2">
+            <Link 
+              href="/verify"
+              className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 font-semibold transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to search
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -550,12 +563,30 @@ export default function VerifyPage() {
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
-                Public certificate verify
+              <div className="flex items-center gap-4">
+                <Link 
+                  href="/verify"
+                  className="inline-flex items-center justify-center p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+                  title="Back to search"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Link>
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
+                  Public certificate verify
+                </div>
               </div>
               <div className="flex items-start gap-4">
                 <div className="rounded-2xl bg-white/15 p-3">
-                  <StatusIcon className="h-8 w-8" />
+                  {!logoError ? (
+                    <img 
+                      src="/certificate/logo.png" 
+                      alt="SIU Logo" 
+                      className="h-12 w-auto object-contain transition-opacity"
+                      onError={() => setLogoError(true)}
+                    />
+                  ) : (
+                    <StatusIcon className="h-8 w-8" />
+                  )}
                 </div>
                 <div>
                   <h1 className="text-xl font-semibold sm:text-2xl">{statusMeta.title}</h1>
