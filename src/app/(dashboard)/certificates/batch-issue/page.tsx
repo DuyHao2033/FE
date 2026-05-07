@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { Layout, ChevronRight, Search, Loader2, ArrowLeft, FileText, Download, Upload, AlertCircle, CheckCircle2, ListOrdered, ClipboardList } from 'lucide-react';
+import { Layout, ChevronRight, Search, Loader2, ArrowLeft, FileText, Download, Upload, AlertCircle, CheckCircle2, ListOrdered, ClipboardList, HelpCircle } from 'lucide-react';
 import { getFullUrl } from '@/utils/url';
 import { useTranslation } from 'react-i18next';
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
 interface Template {
   id: string;
@@ -68,6 +70,62 @@ export default function BatchIssuePage() {
     setBatchName(`${t('certificates.batches.title')} ${tmpl.name} - ${dateStr}`);
     setStep('configure');
   };
+
+  const handleStartTour = useCallback(() => {
+    const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
+    if (step === 'select-template') {
+      const driverStep1 = driver({
+        popoverClass: isDark ? 'driverjs-theme-dark' : '',
+        steps: [
+          {
+            element: '#tour-batch-template-0',
+            popover: {
+              title: 'Bước 1: Chọn mẫu chứng chỉ',
+              description: 'Chọn mẫu thiết kế đại diện mà bạn muốn áp dụng cho toàn bộ danh sách trong lô này.',
+              side: 'top',
+            },
+          },
+        ],
+      });
+      driverStep1.drive();
+    } else {
+      const driverStepConfig = driver({
+        showProgress: true,
+        nextBtnText: 'Tiếp theo',
+        prevBtnText: 'Quay lại',
+        doneBtnText: 'Hoàn tất',
+        popoverClass: isDark ? 'driverjs-theme-dark' : '',
+        steps: [
+          {
+            element: '#tour-batch-excel',
+            popover: {
+              title: 'Tải file mẫu',
+              description: 'Hệ thống sẽ tạo file Excel chứa các cột tương ứng với mẫu bạn đã chọn. Hãy tải về và điền thông tin học viên vào đó.',
+              side: 'right',
+            },
+          },
+          {
+            element: '#tour-batch-upload',
+            popover: {
+              title: 'Tải lên dữ liệu',
+              description: 'Kéo thả file Excel đã điền thông tin vào đây để hệ thống kiểm tra.',
+              side: 'top',
+            },
+          },
+          {
+            element: '#tour-batch-submit',
+            popover: {
+              title: 'Bắt đầu cấp phát',
+              description: 'Nhấn nút này để hệ thống tiến hành tạo chứng chỉ hàng loạt. Quá trình này sẽ chạy ngầm.',
+              side: 'top',
+            },
+          },
+        ],
+      });
+      driverStepConfig.drive();
+    }
+  }, [step]);
 
   const handleDownloadTemplate = async () => {
     if (!selectedTemplate) return;
@@ -146,8 +204,14 @@ export default function BatchIssuePage() {
                     {step === 'select-template' ? t('certificates.batches.batchIssue.step1') : t('certificates.batches.batchIssue.step2', { name: selectedTemplate?.name })}
                 </p>
             </div>
+            <button
+              type="button"
+              onClick={handleStartTour}
+              className="ml-2 p-3 rounded-2xl border border-gray-100 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all shadow-sm"
+            >
+              <HelpCircle size={18} />
+            </button>
           </div>
-
           <div className="flex items-center gap-3">
               <div className={`flex items-center justify-center w-10 h-10 rounded-2xl text-sm font-bold transition-all ${step === 'select-template' ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-200 -rotate-3' : 'bg-green-100 text-green-700'}`}>
                   {step === 'select-template' ? '1' : <CheckCircle2 size={20} />}
@@ -193,9 +257,10 @@ export default function BatchIssuePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-12">
-              {filteredTemplates.map((tmpl) => (
+              {filteredTemplates.map((tmpl, index) => (
                 <div 
                   key={tmpl.id} 
+                  id={index === 0 ? 'tour-batch-template-0' : undefined}
                   onClick={() => handleTemplateSelect(tmpl)}
                   className="bg-white rounded-[2rem] border-2 border-gray-50 shadow-sm overflow-hidden hover:border-indigo-300 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-2 transition-all duration-300 group cursor-pointer flex flex-col"
                 >
@@ -259,6 +324,7 @@ export default function BatchIssuePage() {
 
                 <div className="mt-8 pt-8 border-t border-dashed border-gray-100 w-full">
                     <button 
+                        id="tour-batch-excel"
                         onClick={handleDownloadTemplate}
                         className="group flex flex-col items-center gap-3 w-full p-6 rounded-[2rem] bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 hover:border-emerald-200 transition-all"
                     >
@@ -346,7 +412,7 @@ export default function BatchIssuePage() {
 
                 <div className="pt-8">
                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 mb-3 block">{t('certificates.batches.batchIssue.dataFile')} <span className="text-red-500">*</span></label>
-                     <div className={`relative border-3 border-dashed rounded-[2.5rem] transition-all duration-300 group flex flex-col items-center justify-center p-12 overflow-hidden ${file ? 'border-indigo-400 bg-indigo-50/30' : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50/50'}`}>
+                     <div id="tour-batch-upload" className={`relative border-3 border-dashed rounded-[2.5rem] transition-all duration-300 group flex flex-col items-center justify-center p-12 overflow-hidden ${file ? 'border-indigo-400 bg-indigo-50/30' : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50/50'}`}>
                         <input 
                             type="file" 
                             accept=".xlsx, .xls"
@@ -390,6 +456,7 @@ export default function BatchIssuePage() {
 
               <div className="p-8 border-t border-gray-100 bg-gray-50/30">
                 <button
+                    id="tour-batch-submit"
                     type="submit"
                     disabled={isSubmitting || !file}
                     className={`w-full flex items-center justify-center gap-3 py-6 rounded-[2rem] text-lg font-bold transition-all shadow-2xl ${isSubmitting || !file ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-500/30'}`}

@@ -75,3 +75,64 @@ body {
   color: var(--foreground);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* --- TÙY CHỈNH DRIVER.JS ĐÃ SỬA LỖI MÀU --- */
+/* --- FIX TRIỆT ĐỂ DRIVER.JS DARK MODE --- */
+
+/* 1. Khung nội dung chính */
+.driver-popover.driverjs-theme {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* 2. Tiêu đề (Search) */
+.driver-popover-title {
+  color: var(--foreground) !important; /* Ép chữ màu trắng/đen tùy mode */
+  font-weight: 800 !important;
+  font-size: 18px !important;
+  display: block !important;
+}
+
+/* 3. Đoạn mô tả */
+.driver-popover-description {
+  color: var(--muted-foreground) !important; /* Ép chữ màu xám sáng */
+  font-size: 14px !important;
+  margin-top: 8px !important;
+  line-height: 1.5 !important;
+}
+
+/* 4. Các nút Previous/Next */
+.driver-popover-footer button {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  text-shadow: none !important;
+}
+
+/* Nút Previous thường để màu xám cho dễ phân biệt */
+.driver-popover-prev-btn {
+  background-color: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+}
+
+/* 5. Nút đóng (X) */
+.driver-popover-close-btn {
+  color: var(--muted-foreground) !important;
+}
+
+.driver-popover-close-btn:hover {
+  color: var(--destructive) !important;
+}
+
+/* 6. Mũi tên chỉ vào phần tử */
+.driver-popover-arrow-side-bottom { border-bottom-color: var(--card) !important; }
+.driver-popover-arrow-side-top { border-top-color: var(--card) !important; }
+.driver-popover-arrow-side-left { border-left-color: var(--card) !important; }
+.driver-popover-arrow-side-right { border-right-color: var(--card) !important; }

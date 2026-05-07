@@ -333,7 +333,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
   };
 
   return (
-    <div className="relative flex flex-1 h-full min-h-0 bg-muted/30 border border-border rounded-2xl overflow-hidden shadow-sm">
+    <div id="builder-container" className="relative flex flex-1 h-full min-h-0 bg-muted/30 border border-border rounded-2xl overflow-hidden shadow-sm">
       {/* Sidebar */}
       <div className="w-80 bg-card border-r border-border flex flex-col z-10 text-foreground">
 
@@ -367,28 +367,30 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                 <div className="space-y-4">
                   {extraIssueData && (
                     <>
-                      <div className="bg-accent/30 p-3 rounded-xl border border-border/50 shadow-sm">
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.decisionLink')}</label>
+                      {/* Block 1: decision_id */}
+                      <div className="bg-accent/30 p-3 rounded-xl border border-border/50 shadow-sm decision-section">
+                        <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">
+                          {t('builder.decisionLink')}
+                        </label>
                         <select
                           value={extraIssueData.decisionId}
                           onChange={(e) => extraIssueData.setDecisionId(e.target.value)}
-                          className="w-full text-sm border-border rounded-lg p-2 border bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                          className="w-full text-sm border-border rounded-lg p-2 border bg-card ..."
                         >
-                          <option value="">{t('builder.noDecision')}</option>
-                          {extraIssueData.decisions.map(d => (
-                            <option key={d.id} value={d.id}>{d.decision_number} ({new Date(d.decision_date).toLocaleDateString()})</option>
-                          ))}
+                          {/* ... options ... */}
                         </select>
                       </div>
 
-                      <div className="bg-accent/30 p-3 rounded-xl border border-border/50 shadow-sm">
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">{t('builder.registryNum')}</label>
+                      {/* Block 2: registry_number */}
+                      <div className="bg-accent/30 p-3 rounded-xl border border-border/50 shadow-sm registry-section">
+                        <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">
+                          {t('builder.registryNum')}
+                        </label>
                         <input
                           type="text"
                           value={extraIssueData.registryNumber}
                           onChange={(e) => extraIssueData.setRegistryNumber(e.target.value)}
-                          placeholder="v.d. 001/2026"
-                          className="w-full text-sm border-border rounded-lg p-2 border bg-card focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                          className="w-full text-sm border-border rounded-lg p-2 border bg-card ..."
                         />
                       </div>
                       <div className="h-px bg-border/50 my-2" />
@@ -404,7 +406,6 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
 
                     // 1. Map Core Fields
                     coreKeys.forEach(k => {
-                      // Check if this core key exists anywhere in templates
                       const foundEl = elements.find(el =>
                         (el.type === 'text' && el.is_variable && el.key === k) ||
                         (el.type === 'text' && el.content?.includes(`{{${k}}}`))
@@ -451,8 +452,15 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                         || (input.elId ? (elements.find(e => e.id === input.elId)?.content || '') : '')
                         || (elements[0]?.runtime_values?.[input.key] || '');
 
+                      let tourClass = '';
+                      if (input.key === 'recipient_name') {
+                        tourClass = 'recipient-name-input';
+                      } else if (!isCore) {
+                        tourClass = 'variable-inputs-section';
+                      }
+
                       return (
-                        <div key={input.key} className="bg-accent/30 p-3 rounded-xl border border-border/50 shadow-sm transition-all hover:bg-card hover:border-primary/50 group/input">
+                        <div key={input.key} className={`bg-accent/30 p-3 rounded-xl border border-border/50 shadow-sm transition-all hover:bg-card hover:border-primary/50 group/input ${tourClass}`}>
                           <label className="block text-[10px] font-bold text-muted-foreground mb-1.5 uppercase tracking-widest flex items-center gap-1.5">
                             <span className={`w-1.5 h-1.5 rounded-full ${isCore ? 'bg-primary' : 'bg-emerald-500'}`}></span>
                             {input.label}
@@ -466,25 +474,20 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                             value={value}
                             onChange={(e) => {
                               const newVal = e.target.value;
-                              // Update all elements that use this key
                               setElements(elements.map((item, idx) => {
                                 let updated = false;
                                 let newItem = { ...item };
 
-                                // Case 1: Legacy variable element
                                 if (item.id === input.elId && item.is_variable) {
                                   newItem.content = newVal;
                                   updated = true;
                                 }
 
-                                // Case 2: Element containing this placeholder
                                 if (item.type === 'text' && item.content?.includes(`{{${input.key}}}`)) {
                                   newItem.runtime_values = { ...(item.runtime_values || {}), [input.key]: newVal };
                                   updated = true;
                                 }
 
-                                // Case 3: For core fields NOT in template, store in the first available element 
-                                // so the parent Issue page can still extract it from the layout
                                 if (isCore && !input.existsInTemplate && idx === 0) {
                                   newItem.runtime_values = { ...(item.runtime_values || {}), [input.key]: newVal };
                                   updated = true;
@@ -527,7 +530,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
           )}
 
           {mode === "builder" && activeTab === 'settings' && (
-            <div className="p-5 space-y-5">
+            <div id="builder-settings" className="p-5 space-y-5">
               <div>
                 <label className="block text-sm font-bold text-foreground mb-1.5">{t('common.templateName')}</label>
                 <input
@@ -613,7 +616,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
 
           {mode === "builder" && activeTab === 'elements' && (
             <>
-              <div className="p-4 space-y-3 border-b border-border">
+              <div id="builder-toolbar" className="p-4 space-y-3 border-b border-border">
                 <button
                   onClick={handleAddText}
                   className="w-full flex items-center justify-center gap-2.5 p-3 rounded-xl border border-border bg-card hover:bg-primary/5 hover:text-primary hover:border-primary/50 transition-all font-bold text-sm shadow-sm"
@@ -908,6 +911,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
         <div className="p-5 border-t border-border bg-accent/30">
           {onSave && (
             <button
+              id="builder-save-btn"
               onClick={() => onSave && onSave({ elements }, metadata, bgFile)}
               className="w-full bg-primary text-primary-foreground px-5 py-4 rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center gap-2.5 hover:opacity-90 transform active:scale-95 transition-all font-bold text-xs uppercase tracking-widest"
             >

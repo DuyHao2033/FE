@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import { Plus, MoreVertical, Layout, Search, Trash2, CheckCircle, XCircle, ChevronLeft, ChevronRight, Loader2, Copy, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Plus, MoreVertical, Layout, Search, Trash2, CheckCircle, XCircle, ChevronLeft, ChevronRight, Loader2, Copy, Sparkles, SlidersHorizontal, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { getFullUrl } from '@/utils/url';
 import { api } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
 
 interface Template {
   id: string;
@@ -70,7 +73,60 @@ export default function TemplatesPage() {
   useEffect(() => {
     fetchTemplates();
   }, [debouncedSearch, currentPage]);
-
+const handleStartTour = useCallback(() => {
+  const isDark = document.documentElement.classList.contains('dark');
+  
+  const d = driver({
+    showProgress: true,
+    nextBtnText: 'Tiếp theo',
+    prevBtnText: 'Quay lại',
+    doneBtnText: 'Đã hiểu',
+    popoverClass: isDark ? 'driverjs-theme-dark' : '',
+    steps: [
+      {
+        element: '#tour-search',
+        popover: {
+          title: 'Tìm kiếm mẫu',
+          description: 'Bạn có thể tìm nhanh các mẫu chứng chỉ theo tên hoặc danh mục tại đây.',
+          side: "bottom"
+        }
+      },
+      {
+        element: '#tour-create-btn',
+        popover: {
+          title: 'Tạo mẫu mới',
+          description: 'Bắt đầu thiết kế một mẫu chứng chỉ hoàn toàn mới từ đầu.',
+          side: "left"
+        }
+      },
+      {
+        element: '#tour-template-card',
+        popover: {
+          title: 'Quản lý mẫu',
+          description: 'Mỗi thẻ đại diện cho một mẫu. bạn có thể xem trước trạng thái (Hoạt động/Nháp) tại đây.',
+          side: "top"
+        }
+      },
+      {
+        element: '#tour-edit-btn',
+        popover: {
+          title: 'Chỉnh sửa thiết kế',
+          description: 'Nhấn vào đây để vào giao diện Builder, nơi bạn có thể kéo thả và thay đổi nội dung chứng chỉ.',
+          side: "bottom"
+        }
+      },
+      {
+        element: '#tour-more-options',
+        popover: {
+          title: 'Thêm thao tác',
+          description: 'Tại đây bạn có thể Nhân bản (Duplicate) mẫu để tiết kiệm thời gian hoặc Kích hoạt/Hủy kích hoạt mẫu.',
+          side: "left"
+        }
+      }
+    ]
+  });
+  d.drive();
+}, []);
   const handleDuplicate = async (tmpl: Template) => {
     try {
       setIsSubmitting(true);
@@ -114,7 +170,7 @@ export default function TemplatesPage() {
     }
   };
 
-  return (
+return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -127,25 +183,33 @@ export default function TemplatesPage() {
             {t('templates.subtitle')}
           </p>
         </div>
-        
-        <Link
-          href="/templates/create"
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all duration-200 whitespace-nowrap"
-        >
-          <Plus size={18} />
-          {t('templates.create')}
-        </Link>
-      </div>
-
-      <div className="relative max-w-xl group">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
-        <input
-          type="text"
-          placeholder={t('templates.searchPlaceholder')}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-xl border border-border bg-card py-3 pl-10 pr-4 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-        />
+        <div id="tour-search" className="relative max-w-xl group">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
+          <input
+            type="text"
+            placeholder={t('templates.searchPlaceholder')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-xl border border-border bg-card py-3 pl-10 pr-4 text-sm shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            id="tour-create-btn"
+            href="/templates/create"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all duration-200 whitespace-nowrap"
+          >
+            <Plus size={18} />
+            {t('templates.create')}
+          </Link>
+          <button
+            type="button"
+            onClick={handleStartTour}
+            className="inline-flex items-center justify-center rounded-xl border border-border px-4 py-2 text-sm font-bold text-foreground hover:bg-accent transition-all"
+          >
+            <HelpCircle size={18} />
+          </button>
+        </div>
       </div>
       
       {loading ? (
@@ -172,8 +236,8 @@ export default function TemplatesPage() {
       ) : (
           <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
-            {templates.map((tmpl: Template) => (
-                <div key={tmpl.id} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all group flex flex-col relative border-b-4 border-b-transparent hover:border-b-primary hover:-translate-y-1">
+            {templates.map((tmpl: Template, index: number) => (
+                <div key={tmpl.id} id={index === 0 ? 'tour-template-card' : undefined} className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all group flex flex-col relative border-b-4 border-b-transparent hover:border-b-primary hover:-translate-y-1">
                     <div className="h-52 bg-accent/30 flex items-center justify-center border-b border-border relative overflow-hidden">
                         {tmpl.background_url ? (
                             <img 
@@ -199,6 +263,7 @@ export default function TemplatesPage() {
                            <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{tmpl.category || t('common.general')}</p>
                            <div className="relative">
                                 <button 
+                                    id={index === 0 ? 'tour-more-options' : undefined}
                                     onClick={() => setActiveMenuId(activeMenuId === tmpl.id ? null : tmpl.id)}
                                     className={`p-2 rounded-lg transition-all border ${activeMenuId === tmpl.id ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-foreground hover:bg-accent border-border/50'}`}
                                 >
@@ -253,6 +318,7 @@ export default function TemplatesPage() {
                         </div>
                         
                         <Link 
+                          id={index === 0 ? 'tour-edit-btn' : undefined}
                           href={`/templates/${tmpl.id}/builder`}
                           className="mt-auto w-full inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-foreground hover:bg-primary hover:text-primary-foreground border border-border/50 transition-all duration-300"
                         >

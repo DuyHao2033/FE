@@ -149,7 +149,6 @@
         "batchName": "Batch Name",
         "batchNamePlaceholder": "e.g. Summer 2024 Batch",
         "linkDecision": "Link to Decision (optional)",
-        "noDecision": "No decision linked",
         "startNumber": "Start sequence number",
         "startNumberHint": "Used for \"Registry Number\" if left blank in the Excel file.",
         "description": "Additional description",
@@ -286,6 +285,45 @@
       "organization": "Organization"
     }
   },
+  "tour": {
+    "next": "Next",
+    "prev": "Back",
+    "done": "Done",
+    "search": { 
+      "title": "Search", 
+      "desc": "Search for certificates by name or ID number." 
+    },
+    "manageBatches": { 
+      "title": "Manage Batches", 
+      "desc": "View and edit certificate issuance batches." 
+    },
+    "batchIssue": { 
+      "title": "Batch Issue", 
+      "desc": "Upload Excel files for bulk certificate issuance." 
+    },
+    "singleIssue": { 
+      "title": "Single Issue", 
+      "desc": "Quickly create a certificate for an individual." 
+    },
+    "table": { 
+      "title": "List", 
+      "desc": "Manage status and download PDF files." 
+    },
+    "searchTitle": "Find Template",
+    "searchDesc": "Search for templates (template_id).",
+    "selectTitle": "Select Template",
+    "selectDesc": "Identify the template_id for the certificate.",
+    "decisionTitle": "Field 1: Decision",
+    "decisionDesc": "Select an award decision to link the ID to the system.",
+    "registryTitle": "Field 2: Registry Number",
+    "registryDesc": "Enter the registry number for official ledger storage.",
+    "recipientTitle": "Field 3: Recipient Name",
+    "recipientDesc": "The primary recipient name displayed on the certificate.",
+    "customTitle": "Field 4+: Custom Data",
+    "customDesc": "Other fields will be grouped into custom_data.",
+    "submitTitle": "Send Data",
+    "submitDesc": "Click to package all information and send to the issuance API."
+  },
   "organizations": {
     "title": "Organizations",
     "subtitle": "Manage organizations and departments in the system.",
@@ -354,42 +392,68 @@
   },
   "userGuide": {
     "title": "User Guide",
-    "subtitle": "How to use the system in an easy-to-understand way.",
-    "description": "This page is written for users who are not tech-savvy. Just follow each step, read the button names carefully, and follow the instructions.",
+    "subtitle": "Master the system with ease and simplicity.",
+    "description": "Designed for everyone. Follow the step-by-step instructions and clear button labels to get started.",
     "quickTip": "Quick Tip",
-    "slowDown": "Slow down a bit to make it easier to get right.",
-    "basicSteps": "Basic Steps",
+    "slowDown": "Take it slow. Following each step carefully ensures the best results.",
+    "basicSteps": "How to make your first certificate",
     "importantNotes": "Important Notes",
-    "stillUnclear": "If still unclear",
-    "contactAdmin": "Please ask the administrator or the person in charge of the system. You can clearly state which screen you are on and what you want to do.",
-    "backToDashboard": "Back to dashboard",
+    "stillUnclear": "Need further assistance?",
+    "contactAdmin": "Contact your administrator or person in charge. Please specify your current screen and the task you're trying to perform.",
+    "backToDashboard": "Back to Dashboard",
     "steps": {
-      "step1": {
-        "title": "1. Login",
-        "description": "Use the provided account to enter the system. If you forget your password, contact the person in charge."
-      },
-      "step2": {
-        "title": "2. Choose what to do",
-        "description": "In the left sidebar, choose the appropriate section such as certificates, templates, users, or batches."
-      },
-      "step3": {
-        "title": "3. Fill in information",
-        "description": "Each screen will have boxes to enter data. Just fill in each box according to the instructions on the screen."
-      },
-      "step4": {
-        "title": "4. Review before saving",
-        "description": "Check the name, code, dates, and other important information before clicking the save or issue button."
-      },
-      "step5": {
-        "title": "5. Check certificates",
-        "description": "If verification is needed, use the certificate code to open the lookup page and see the results immediately."
-      }
+  "step1": {
+    "title": "Explore Overview & Navigation",
+    "description": "Once logged in, you can quickly start your work via the Quick Actions board or the Left Navigation Bar. Select the corresponding function to begin.",
+    "notes": {
+      "single": "Button 1: Single Issuance - For manually issuing to individuals.",
+      "template": "Button 2: Create New Template - Design certificate layouts online.",
+      "bulk": "Button 3: Batch Issuance - Use Excel files for mass issuing."
+    }
+  },
+  "step2": {
+    "title": "Single Issuance (Manual)",
+    "description": "This feature allows you to quickly issue a certificate to a specific student by entering information directly into the form.",
+    "notes": {
+      "clickButton": "On the Dashboard or Sidebar, click the 'Issue Single' button.",
+      "fillInfo": "The system will redirect you to the template selection interface.",
+      "selectTemplate": "Make sure you have a designed template ready before proceeding.",
+      "confirm": "If no template exists, go back to 'Create New Template' to design one."
+    }
+  },
+  "step3": {
+    "title": "Select Certificate Template",
+    "description": "On this screen, you will see a list of pre-designed templates. Selecting the correct template ensures the information is printed accurately.",
+    "notes": {
+      "viewTemplate": "Carefully check the preview image and template name (e.g., Scholarship Certificate 2026).",
+      "clickSelect": "Click directly on the certificate template card to start filling in the issuance details."
+    }
+  },
+  "step4": {
+    "title": "Enter Details & Complete",
+    "description": "This is the final step for the system to record data and generate the official certificate for the recipient.",
+    "notes": {
+      "fillForm": "Fill in all required fields (Decision, Reference Number, Full Name, ID, etc.).",
+      "checkPreview": "Double-check if the content matches the template preview on the right before confirming.",
+      "submit": "Click 'ISSUE SINGLE CERTIFICATE' and wait a moment for the system to process data."
+    }
+  }
+},
+    "sidebar": {
+      "title": "Method 2: Sidebar Management",
+      "notes": [
+        { "id": 1, "text": "Certificates: Manage and track all issued certificates." },
+        { "id": 2, "text": "Issuance Batches: View and organize groups of certificates by session." },
+        { "id": 3, "text": "Official Decisions: Reference university award decisions and legal records." }
+      ]
     },
     "tips": [
-      "You should only click one button at a time and wait for the result, avoid continuous clicking.",
-      "If the screen reports an error, read the red message just below or above the form.",
-      "When unsure, go back to the previous page and re-check the information.",
-      "You should keep the certificate code or batch code for faster lookup later."
+      "Smooth Operations: Please be patient and allow the system to process after each click. A brief pause ensures your data is synchronized accurately.",
+      "Stay Alert for Notifications: In case of an issue, the system will provide guidance through color-coded alerts. Reading these carefully will help you resolve errors in an instant.",
+      "Verification is Key: Taking a step back to review your information on the previous page will give you more confidence before officially publishing your certificate.",
+      "Security First: Always log out of your account after finishing your session, especially on public devices, to protect your certificate management rights.",
+      "Personal Identity: Double-check your identifying information (Full Name, Email) before clicking 'Confirm'. Once a certificate is digitally signed, any changes will require a full re-issuance process.",
+      "Optimal Display: The system is best viewed on Chrome or Edge browsers. If you encounter display issues, try refreshing the page by pressing Ctrl + F5."
     ]
   },
   "templates": {
@@ -403,4 +467,5 @@
     "nameRequired": "Please provide a template name in the Settings tab.",
     "creating": "Creating your template..."
   }
+  
 }

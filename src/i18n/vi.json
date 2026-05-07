@@ -149,7 +149,6 @@
         "batchName": "Tên đợt cấp phát",
         "batchNamePlaceholder": "v.d. Cấp GCN Khóa hè 2024",
         "linkDecision": "Liên kết Quyết định (nếu có)",
-        "noDecision": "Không liên kết quyết định",
         "startNumber": "Số thứ tự bắt đầu",
         "startNumberHint": "Dùng để bổ sung vào \"Số vào sổ\" nếu trong tệp Excel để trống.",
         "description": "Mô tả thêm",
@@ -286,6 +285,30 @@
       "organization": "Tổ chức / Đơn vị"
     }
   },
+  "tour": {
+    "next": "Tiếp theo",
+    "prev": "Quay lại",
+    "done": "Hoàn tất",
+    "search": { "title": "Tìm kiếm", "desc": "Tìm chứng chỉ theo tên hoặc mã số." },
+    "manageBatches": { "title": "Quản lý đợt", "desc": "Xem và chỉnh sửa các đợt cấp bằng." },
+    "batchIssue": { "title": "Cấp theo đợt", "desc": "Tải file Excel để cấp bằng hàng loạt." },
+    "singleIssue": { "title": "Cấp lẻ", "desc": "Tạo chứng chỉ nhanh cho một cá nhân." },
+    "table": { "title": "Danh sách", "desc": "Nơi quản lý trạng thái và tải file PDF." },
+    "searchTitle": "Tìm mẫu",
+    "searchDesc": "Tìm kiếm mẫu.",
+    "selectTitle": "Chọn mẫu",
+    "selectDesc": "Xác định Mẫu cho chứng chỉ.",
+    "decisionTitle": "Ô 1: Quyết định",
+    "decisionDesc": "Chọn quyết định khen thưởng để liên kết ID vào hệ thống.",
+    "registryTitle": "Ô 2: Số vào sổ",
+    "registryDesc": "Nhập số vào sổ cái để lưu trữ chính thức.",
+    "recipientTitle": "Ô 3: Họ tên người nhận",
+    "recipientDesc": "Đây là tên chính của người nhận hiển thị trên chứng chỉ.",
+    "customTitle": "Ô 4+: Dữ liệu tùy biến",
+    "customDesc": "Các trường khác sẽ được gom vào custom_data.",
+    "submitTitle": "Gửi dữ liệu",
+    "submitDesc": "Nhấn để đóng gói tất cả thông tin và gửi API cấp phát."
+  },
   "organizations": {
     "title": "Tổ chức & Đơn vị",
     "subtitle": "Quản lý các tổ chức, phòng ban trong hệ thống.",
@@ -352,42 +375,60 @@
   },
   "userGuide": {
     "title": "Hướng dẫn sử dụng",
-    "subtitle": "Cách dùng hệ thống một cách dễ hiểu.",
+    "subtitle": "Hướng dẫn cách sử dụng hệ thống một cách đơn giản và dễ hiểu.",
     "description": "Trang này được viết cho người không rành công nghệ. Chỉ cần làm từng bước, đọc kỹ tên nút và làm theo hướng dẫn là được.",
     "quickTip": "Mẹo nhanh",
-    "slowDown": "Làm chậm một chút sẽ dễ đúng hơn.",
-    "basicSteps": "Các bước cơ bản",
+    "slowDown": "Bình tĩnh làm từng bước sẽ dễ thàng công hơn nhiều.",
+    "basicSteps": "Hướng dẫn tạo chứng chỉ",
     "importantNotes": "Lưu ý quan trọng",
-    "stillUnclear": "Nếu vẫn chưa rõ",
-    "contactAdmin": "Hãy nhờ người quản trị hoặc người phụ trách hệ thống. Bạn có thể nói rõ mình đang ở màn hình nào và đang muốn làm gì.",
+    "stillUnclear": "Còn vấn đề hay thắc mắc",
+    "contactAdmin": "Hãy liên hệ ngay với người quản trị hệ thống hay người phụ trách. Lúc này bạn có thể nói rõ đang ở màn hình nào và muốn làm gì.      (+84 90xxxxxx59)   ",
     "backToDashboard": "Quay về trang tổng quan",
     "steps": {
-      "step1": {
-        "title": "1. Đăng nhập",
-        "description": "Dùng tài khoản được cấp sẵn để vào hệ thống. Nếu quên mật khẩu, hãy liên hệ người phụ trách."
-      },
-      "step2": {
-        "title": "2. Chọn việc cần làm",
-        "description": "Ở thanh bên trái, chọn mục phù hợp như chứng chỉ, mẫu, người dùng hoặc lô cấp phát."
-      },
-      "step3": {
-        "title": "3. Điền thông tin",
-        "description": "Mỗi màn hình sẽ có các ô để nhập dữ liệu. Chỉ cần điền từng ô theo hướng dẫn trên màn hình."
-      },
-      "step4": {
-        "title": "4. Xem lại trước khi lưu",
-        "description": "Kiểm tra tên, mã, ngày tháng và các thông tin quan trọng trước khi bấm nút lưu hoặc cấp phát."
-      },
-      "step5": {
-        "title": "5. Kiểm tra chứng chỉ",
-        "description": "Nếu cần xác minh, dùng mã chứng chỉ để mở trang tra cứu và xem kết quả ngay."
-      }
-    },
+  "step1": {
+    "title": "Các nút ở thanh điều hướng",
+    "description": "Sau khi đăng nhập, bạn có thể bắt đầu công việc nhanh chóng thông qua bảng Thao tác nhanh hoặc Thanh điều hướng bên trái. Để bắt đầu cấp chứng chỉ, hãy chọn chức năng tương ứng.",
+    "notes": {
+      "single": "Nút số 1: Cấp chứng chỉ lẻ - Dành cho việc cấp thủ công từng người.",
+      "template": "Nút số 2: Tạo mẫu mới - Thiết kế phôi chứng chỉ trực tuyến.",
+      "bulk": "Nút số 3: Cấp theo đợt - Sử dụng file Excel để cấp hàng loạt."
+    }
+  },
+  "step2": {
+    "title": "Cấp chứng chỉ lẻ (Thủ công)",
+    "description": "Tính năng này cho phép bạn cấp bằng nhanh cho một sinh viên cụ thể bằng cách nhập thông tin trực tiếp vào biểu mẫu.",
+    "notes": {
+      "clickButton": "Tại góc trên bên phải, nhấn vào nút 'Cấp lẻ'.",
+      "fillInfo": "Nhập đầy đủ thông tin sinh viên bao gồm: Họ tên, MSSV, Lớp và xếp loại tốt nghiệp.",
+      "selectTemplate": "Chọn mẫu phôi bằng tương ứng đã thiết kế sẵn.",
+      "confirm": "Kiểm tra lại thông tin lần cuối và nhấn 'Cấp chứng chỉ' để hoàn tất."
+    }
+  },
+  "step3": {
+    "title": "Chọn Mẫu Chứng chỉ",
+    "description": "Tại màn hình này, bạn sẽ thấy danh sách các phôi bằng đã được thiết kế sẵn. Việc chọn đúng mẫu giúp thông tin được in ra chính xác theo định dạng yêu cầu.",
+    "notes": {
+      "viewTemplate": "Kiểm tra kỹ hình ảnh xem trước và tên mẫu (ví dụ: Bằng khen học bổng 2026).",
+      "clickSelect": "Nhấn trực tiếp vào khung mẫu chứng chỉ để bắt đầu điền thông tin cấp phát."
+    }
+  },
+  "step4": {
+    "title": "Nhập Thông tin & Hoàn tất",
+    "description": "Đây là bước cuối cùng để hệ thống ghi nhận dữ liệu và tạo phôi bằng chính thức cho người nhận.",
+    "notes": {
+      "fillForm": "Điền đầy đủ 8 mục thông tin yêu cầu (Quyết định, Số vào sổ, Họ tên, Mã định danh, v.v.).",
+      "checkPreview": "Kiểm tra kỹ nội dung đã khớp với mẫu thiết kế ở khung bên phải trước khi xác nhận.",
+      "submit": "Nhấn nút 'CẤP CHỨNG CHỈ LẺ' và chờ trong giây lát để hệ thống xử lý dữ liệu."
+    }
+  }
+},
     "tips": [
-      "Mỗi lần chỉ nên bấm một nút rồi chờ kết quả, tránh bấm liên tục.",
-      "Nếu màn hình báo lỗi, đọc dòng thông báo màu đỏ ngay bên dưới hoặc phía trên form.",
-      "Khi không chắc chắn, hãy quay lại trang trước và kiểm tra lại thông tin.",
-      "Nên giữ lại mã chứng chỉ hoặc mã lô để tra cứu nhanh hơn sau này."
+      "Thao tác nhịp nhàng: Hãy kiên nhẫn đợi hệ thống xử lý sau mỗi lần nhấn nút. Một nhịp nghỉ ngắn sẽ giúp dữ liệu được đồng bộ chính xác nhất.",
+      "Lắng nghe thông báo: Nếu có sự cố, hệ thống sẽ gửi hướng dẫn qua các dòng thông báo màu sắc. Đọc kỹ các nội dung này sẽ giúp bạn xử lý lỗi trong tích tắc.",
+      "Kiểm tra là trên hết: Một bước lùi lại trang trước để rà soát thông tin sẽ giúp bạn tự tin hơn trước khi xuất bản chứng chỉ chính thức.",
+      "Bảo mật là ưu tiên: Luôn đăng xuất tài khoản sau khi hoàn tất phiên làm việc trên các thiết bị công cộng để bảo vệ quyền quản lý chứng chỉ của bạn.",
+      "Dấu ấn cá nhân: Kiểm tra kỹ thông tin định danh (Email, Họ tên) trước khi nhấn 'Xác nhận'. Một khi chứng chỉ đã được ký số, mọi thay đổi sẽ cần quy trình cấp lại từ đầu.",
+      "Hiển thị tối ưu: Hệ thống được thiết kế tốt nhất trên trình duyệt Chrome hoặc Edge. Nếu gặp lỗi hiển thị, hãy thử làm mới trang bằng phím Ctrl + F5."
     ]
   },
   "templates": {

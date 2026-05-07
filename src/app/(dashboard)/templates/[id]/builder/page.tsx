@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react'; // Thêm useCallback
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import VisualBuilder from '@/components/builder/VisualBuilder';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, HelpCircle } from 'lucide-react'; // Thêm HelpCircle
 import { useTranslation } from 'react-i18next';
+import { driver } from "driver.js"; // Import driver
+import "driver.js/dist/driver.css"; // Import CSS của driver
 
 export default function TemplateBuilderPage() {
   const params = useParams();
@@ -30,6 +32,54 @@ export default function TemplateBuilderPage() {
     if (id) fetchTemplate();
   }, [id]);
 
+  // Hàm kích hoạt hướng dẫn sử dụng (Giống bên trang Create)
+  const handleStartTour = useCallback(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    
+    const d = driver({
+      showProgress: true,
+      nextBtnText: 'Tiếp',
+      prevBtnText: 'Trước',
+      doneBtnText: 'Đã hiểu',
+      popoverClass: isDark ? 'driverjs-theme-dark' : '',
+      steps: [
+        {
+          element: '#builder-container',
+          popover: {
+            title: 'Chế độ chỉnh sửa',
+            description: 'Bạn đang chỉnh sửa mẫu chứng chỉ hiện có. Mọi thay đổi sẽ được cập nhật trực tiếp.',
+            side: "top"
+          }
+        },
+        {
+          element: '#builder-toolbar',
+          popover: {
+            title: 'Thanh công cụ',
+            description: 'Sử dụng các công cụ này để thêm nội dung mới hoặc các trường dữ liệu động.',
+            side: "right"
+          }
+        },
+        {
+          element: '#builder-settings',
+          popover: {
+            title: 'Cấu hình mẫu',
+            description: 'Thay đổi thông tin cơ bản hoặc khổ giấy của mẫu này.',
+            side: "left"
+          }
+        },
+        {
+          element: '#builder-save-btn',
+          popover: {
+            title: 'Cập nhật thay đổi',
+            description: 'Nhấn nút này để lưu lại phiên bản mới của mẫu chứng chỉ.',
+            side: "bottom"
+          }
+        }
+      ]
+    });
+    d.drive();
+  }, []);
+
   const handleSave = async (layout: any, metadata: any, bgFile: File | null) => {
     try {
       setIsSaving(true);
@@ -41,7 +91,6 @@ export default function TemplateBuilderPage() {
         });
       }
 
-      // Process image assets
       const updatedElements = await Promise.all(layout.elements.map(async (el: any) => {
         if (el.type === 'image' && el.file) {
           const formData = new FormData();
@@ -92,13 +141,26 @@ export default function TemplateBuilderPage() {
           </div>
         </div>
       )}
+      
       <div className="flex items-center justify-between mb-2 flex-shrink-0">
         <div className="flex items-center gap-4">
             <button onClick={() => router.push('/templates')} className="text-gray-500 hover:text-gray-900 transition-colors p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
                 <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900">{t('builder.editTemplate', { name: template.name })}</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+                  {t('builder.editTemplate', { name: template.name })}
+                </h1>
+                
+                {/* Nút HelpCircle để bắt đầu Tour */}
+                <button 
+                  onClick={handleStartTour}
+                  className="p-1.5 text-indigo-600 bg-indigo-50 rounded-full hover:bg-indigo-600 hover:text-white transition-all border border-indigo-100"
+                >
+                  <HelpCircle size={16} />
+                </button>
+              </div>
               <p className="text-sm text-gray-500">{t('builder.editSubtitle')}</p>
             </div>
         </div>

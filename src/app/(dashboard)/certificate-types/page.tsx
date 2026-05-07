@@ -5,6 +5,10 @@ import { Plus, Search, Trash2, Edit2, Loader2, Layers, AlertCircle, X, Check, Fi
 import { api } from '@/lib/api';
 import { Modal } from '@/components/ui/Modal';
 import { useTranslation } from 'react-i18next';
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+import { useCallback } from 'react';
+import { HelpCircle } from 'lucide-react';
 
 interface CertificateType {
   id: string;
@@ -16,6 +20,54 @@ interface CertificateType {
 
 export default function CertificateTypesPage() {
   const { t } = useTranslation();
+
+  const handleStartTour = useCallback(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    
+    const d = driver({
+      showProgress: true,
+      nextBtnText: 'Tiếp',
+      prevBtnText: 'Trước',
+      doneBtnText: 'Hoàn tất',
+      popoverClass: isDark ? 'driverjs-theme-dark' : '',
+      steps: [
+        {
+          element: '#tour-header',
+          popover: {
+            title: 'Quản lý Loại chứng chỉ',
+            description: 'Đây là nơi bạn định nghĩa các loại bằng cấp khác nhau (như Bằng tốt nghiệp, Chứng chỉ ngoại ngữ...).',
+            side: "bottom"
+          }
+        },
+        {
+          element: '#tour-search',
+          popover: {
+            title: 'Tìm kiếm nhanh',
+            description: 'Tìm kiếm loại chứng chỉ theo tên hoặc mã định danh.',
+            side: "bottom"
+          }
+        },
+        {
+          element: '#tour-table',
+          popover: {
+            title: 'Danh sách hiện có',
+            description: 'Hiển thị các loại chứng chỉ đã tạo cùng các trường dữ liệu đi kèm.',
+            side: "top"
+          }
+        },
+        {
+          element: '#tour-create-btn',
+          popover: {
+            title: 'Tạo loại mới',
+            description: 'Nhấn vào đây để bắt đầu định nghĩa một mẫu cấu trúc chứng chỉ mới.',
+            side: "left"
+          }
+        }
+      ]
+    });
+    d.drive();
+  }, []);
+
   const [types, setTypes] = useState<CertificateType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -121,7 +173,7 @@ export default function CertificateTypesPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div id="tour-header" className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest mb-1.5">
             <FileStack size={14} />
@@ -130,16 +182,26 @@ export default function CertificateTypesPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('certificateTypes.title')}</h1>
           <p className="mt-2 text-muted-foreground">{t('certificateTypes.subtitle')}</p>
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all duration-200"
-        >
-          <Plus size={18} />
-          {t('certificateTypes.create')}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            id="tour-create-btn"
+            onClick={() => handleOpenModal()}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all duration-200"
+          >
+            <Plus size={18} />
+            {t('certificateTypes.create')}
+          </button>
+          <button
+            onClick={handleStartTour}
+            className="p-1.5 text-primary bg-primary/10 rounded-full hover:bg-primary hover:text-white transition-all border border-primary/20"
+            title="Hướng dẫn sử dụng"
+          >
+            <HelpCircle size={18} />
+          </button>
+        </div>
       </div>
 
-      <div className="relative max-w-md group">
+      <div id="tour-search" className="relative max-w-md group">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 group-focus-within:text-primary transition-colors" />
         <input
           type="text"
@@ -150,7 +212,7 @@ export default function CertificateTypesPage() {
         />
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-card shadow-sm border border-border">
+      <div id="tour-table" className="overflow-hidden rounded-2xl bg-card shadow-sm border border-border">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border">
             <thead className="bg-accent/30">

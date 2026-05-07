@@ -3,8 +3,24 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import { ArrowRight, Calendar, CheckCircle2, CircleAlert, Clock3, FileText, Layers, Loader2, Search, Sparkles } from 'lucide-react';
+import { 
+  ArrowRight, 
+  Calendar, 
+  CheckCircle2, 
+  CircleAlert, 
+  Clock3, 
+  FileText, 
+  Layers, 
+  Loader2, 
+  Search, 
+  Sparkles, 
+  HelpCircle, 
+  X,
+  Info // Đã thêm Info vào đây để hết lỗi
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
 interface BatchItem {
   id: string;
@@ -39,6 +55,7 @@ export default function CertificateBatchesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [templateNameById, setTemplateNameById] = useState<Record<string, string>>({});
   const [decisionNumberById, setDecisionNumberById] = useState<Record<string, string>>({});
+  const [showGuide, setShowGuide] = useState(false);
 
   const statusTone: Record<string, string> = {
     pending: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
@@ -46,6 +63,27 @@ export default function CertificateBatchesPage() {
     completed: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
     completed_with_errors: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
     failed: 'bg-destructive/10 text-destructive border-destructive/20',
+  };
+
+  const startTour = () => {
+    const driverObj = driver({
+      showProgress: true,
+      nextBtnText: 'Tiếp theo',
+      prevBtnText: 'Quay lại',
+      doneBtnText: 'Hoàn tất',
+      steps: [
+        { 
+          element: '#btn-create-batch', 
+          popover: { 
+            title: 'Bước 1: Tạo đợt cấp', 
+            description: 'Nhấn vào đây khi bạn muốn bắt đầu tạo một đợt cấp chứng chỉ mới hàng loạt từ file dữ liệu.', 
+            side: "left", 
+            align: 'start' 
+          } 
+        },
+      ]
+    });
+    driverObj.drive();
   };
 
   useEffect(() => {
@@ -102,14 +140,62 @@ export default function CertificateBatchesPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('certificates.batches.title')}</h1>
           <p className="mt-2 text-muted-foreground">{t('certificates.batches.subtitle')}</p>
         </div>
-        <Link
-          href="/certificates/batch-issue"
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all duration-200"
-        >
-          <Sparkles size={18} />
-          {t('certificates.batches.create')}
-        </Link>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={startTour}
+            className="p-2.5 rounded-xl border border-border bg-card text-muted-foreground hover:text-primary transition-all duration-200 hover:shadow-md"
+            title="Hướng dẫn từng bước"
+          >
+            <HelpCircle size={20} />
+          </button>
+          <button 
+            onClick={() => setShowGuide(!showGuide)}
+            className={`p-2.5 rounded-xl border transition-all duration-200 ${showGuide ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-muted-foreground border-border hover:border-primary/50'}`}
+          >
+            {showGuide ? <X size={20} /> : <Info size={20} />}
+          </button>
+          <Link
+            id="btn-create-batch"
+            href="/certificates/batch-issue"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90 transition-all duration-200"
+          >
+            <Sparkles size={18} />
+            {t('certificates.batches.create')}
+          </Link>
+        </div>
       </div>
+
+      {showGuide && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 rounded-2xl bg-primary/[0.03] border border-primary/10 animate-in zoom-in-95 duration-300">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 font-bold text-sm text-primary uppercase tracking-wider">
+              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px]">1</div>
+              Chuẩn bị dữ liệu
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Tải file Excel mẫu và điền thông tin người nhận. Đảm bảo các cột dữ liệu trùng khớp với các biến (tags) bạn đã đặt trên mẫu phôi.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 font-bold text-sm text-primary uppercase tracking-wider">
+              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px]">2</div>
+              Xử lý hàng loạt
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Hệ thống sẽ render PDF tự động cho từng dòng dữ liệu. Bạn có thể rời khỏi trang, quá trình này vẫn sẽ tiếp tục chạy ngầm trên server.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 font-bold text-sm text-primary uppercase tracking-wider">
+              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px]">3</div>
+              Quản lý kết quả
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Trạng thái <b>Completed</b> xác nhận đợt cấp thành công. Bạn có thể xem chi tiết từng chứng chỉ hoặc thực hiện thu hồi nếu cần.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="relative max-w-xl">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
@@ -149,9 +235,8 @@ export default function CertificateBatchesPage() {
                 {filtered.map((batch) => {
                   const total = batch.total_records ?? 0;
                   const processed = batch.processed_records ?? batch.success_count ?? 0;
-                  const failed = batch.failed_count ?? 0;
-                  const percent = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : 0;
                   const status = (batch.status || 'pending').toLowerCase();
+                  
                   return (
                     <tr key={batch.id} className="hover:bg-accent/10 transition-colors group">
                       <td className="px-6 py-5">
@@ -162,8 +247,10 @@ export default function CertificateBatchesPage() {
                         </div>
                       </td>
                       <td className="px-6 py-5">
-                        <div className="text-sm font-medium text-foreground">{batch.template_name || batch.template?.name || templateNameById[batch.template_id || ''] || t('certificates.batches.noTemplate')}</div>
-                        <div className="mt-1 text-xs text-muted-foreground italic">
+                        <div className="text-sm font-medium text-foreground italic">
+                          {batch.template_name || batch.template?.name || templateNameById[batch.template_id || ''] || t('certificates.batches.noTemplate')}
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground opacity-70">
                           {batch.decision_number || batch.decision?.decision_number || decisionNumberById[batch.decision_id || ''] || t('certificates.batches.noDecision')}
                         </div>
                       </td>
