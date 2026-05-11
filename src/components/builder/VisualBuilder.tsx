@@ -364,7 +364,7 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                   {t('builder.issueInfo')}
                 </h3>
 
-                <div className="space-y-4">
+                <div id="tour-step-info" className="space-y-4">
                   {extraIssueData && (
                     <>
                       {/* Block 1: decision_id */}
@@ -375,9 +375,14 @@ export default function VisualBuilder({ initialLayout, initialMetadata, backgrou
                         <select
                           value={extraIssueData.decisionId}
                           onChange={(e) => extraIssueData.setDecisionId(e.target.value)}
-                          className="w-full text-sm border-border rounded-lg p-2 border bg-card ..."
+                          className="w-full text-sm border-border rounded-lg p-2 border bg-card"
                         >
-                          {/* ... options ... */}
+                          <option value="">{t('builder.noDecision')}</option>
+                          {extraIssueData.decisions.map((decision: any) => (
+                            <option key={decision.id} value={decision.id}>
+                              {decision.decision_number || decision.name || decision.id}
+                            </option>
+                          ))}
                         </select>
                       </div>
 
