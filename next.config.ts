@@ -1,8 +1,14 @@
 import type { NextConfig } from "next";
 
+const isProd = process.env.NODE_ENV === "production";
+
 const nextConfig: NextConfig = {
-  // Đã xóa basePath để web chạy ngay tại link gốc của Vercel
-  
+  // Chạy ứng dụng dưới subpath /certificate
+  basePath: "/certificate",
+
+  // Next.js tự động handle assetPrefix khi dùng basePath, gỡ bỏ assetPrefix thủ công
+  // assetPrefix: isProd ? "/certificate" : undefined,
+
   allowedDevOrigins: [
     "192.168.1.250:3001",
     "ailab.siu.edu.vn",
@@ -12,8 +18,8 @@ const nextConfig: NextConfig = {
 
   reactStrictMode: true,
 
-  // Tắt trailingSlash để các đường dẫn trông sạch hơn trên Vercel
-  trailingSlash: false,
+  // Đồng bộ trailing slash với cấu hình Nginx location /certificate/
+  trailingSlash: true,
 
   images: {
     unoptimized: true,

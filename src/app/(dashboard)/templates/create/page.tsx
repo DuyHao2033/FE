@@ -20,47 +20,47 @@ const handleStartTour = useCallback(() => {
   
   const d = driver({
     showProgress: true,
-    nextBtnText: 'Tiếp',
-    prevBtnText: 'Trước',
-    doneBtnText: 'Bắt đầu thiết kế',
+    nextBtnText: t('tour.next'),
+    prevBtnText: t('tour.prev'),
+    doneBtnText: t('tour.done'),
     popoverClass: isDark ? 'driverjs-theme-dark' : '',
     steps: [
       {
         element: '#builder-container',
         popover: {
-          title: 'Trình thiết kế trực quan',
-          description: 'Đây là không gian làm việc chính, nơi bạn kéo thả và sắp xếp các thành phần của chứng chỉ.',
+          title: t('tour.builderContainerTitle'),
+          description: t('tour.builderContainerDesc'),
           side: "top"
         }
       },
       {
         element: '#builder-toolbar', // Cần gắn ID này trong VisualBuilder
         popover: {
-          title: 'Thanh công cụ',
-          description: 'Thêm văn bản, hình ảnh, mã QR hoặc các trường dữ liệu động (Tên học viên, Ngày cấp...) từ đây.',
+          title: t('tour.builderToolbarTitle'),
+          description: t('tour.builderToolbarDesc'),
           side: "right"
         }
       },
       {
         element: '#builder-settings', // Cần gắn ID này trong VisualBuilder
         popover: {
-          title: 'Cấu hình mẫu',
-          description: 'Thay đổi kích thước trang (A4), hướng giấy (Ngang/Dọc) và tải lên hình nền cho chứng chỉ.',
+          title: t('tour.builderSettingsTitle'),
+          description: t('tour.builderSettingsDesc'),
           side: "left"
         }
       },
       {
         element: '#builder-save-btn', // Cần gắn ID này trong VisualBuilder
         popover: {
-          title: 'Lưu mẫu',
-          description: 'Sau khi hoàn tất thiết kế, nhấn nút này để hệ thống xử lý hình ảnh và lưu mẫu vào danh sách.',
+          title: t('tour.builderSaveTitle'),
+          description: t('tour.builderSaveDesc'),
           side: "bottom"
         }
       }
     ]
   });
   d.drive();
-}, []);
+}, [t]);
   const handleCreate = async (layout: { elements: BuilderElement[] }, metadata: TemplateMetadata, bgFile: File | null) => {
     if (!metadata.name) {
       alert(t('templates.nameRequired'));

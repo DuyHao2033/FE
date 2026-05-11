@@ -26,47 +26,47 @@ export default function CertificateTypesPage() {
     
     const d = driver({
       showProgress: true,
-      nextBtnText: 'Tiếp',
-      prevBtnText: 'Trước',
-      doneBtnText: 'Hoàn tất',
+      nextBtnText: t('tour.next'),
+      prevBtnText: t('tour.prev'),
+      doneBtnText: t('tour.done'),
       popoverClass: isDark ? 'driverjs-theme-dark' : '',
       steps: [
         {
           element: '#tour-header',
           popover: {
-            title: 'Quản lý Loại chứng chỉ',
-            description: 'Đây là nơi bạn định nghĩa các loại bằng cấp khác nhau (như Bằng tốt nghiệp, Chứng chỉ ngoại ngữ...).',
+            title: t('tour.certificateTypesHeaderTitle'),
+            description: t('tour.certificateTypesHeaderDesc'),
             side: "bottom"
           }
         },
         {
           element: '#tour-search',
           popover: {
-            title: 'Tìm kiếm nhanh',
-            description: 'Tìm kiếm loại chứng chỉ theo tên hoặc mã định danh.',
+            title: t('tour.certificateTypesSearchTitle'),
+            description: t('tour.certificateTypesSearchDesc'),
             side: "bottom"
           }
         },
         {
           element: '#tour-table',
           popover: {
-            title: 'Danh sách hiện có',
-            description: 'Hiển thị các loại chứng chỉ đã tạo cùng các trường dữ liệu đi kèm.',
+            title: t('tour.certificateTypesTableTitle'),
+            description: t('tour.certificateTypesTableDesc'),
             side: "top"
           }
         },
         {
           element: '#tour-create-btn',
           popover: {
-            title: 'Tạo loại mới',
-            description: 'Nhấn vào đây để bắt đầu định nghĩa một mẫu cấu trúc chứng chỉ mới.',
+            title: t('tour.certificateTypesCreateTitle'),
+            description: t('tour.certificateTypesCreateDesc'),
             side: "left"
           }
         }
       ]
     });
     d.drive();
-  }, []);
+  }, [t]);
 
   const [types, setTypes] = useState<CertificateType[]>([]);
   const [loading, setLoading] = useState(true);

@@ -68,15 +68,15 @@ export default function CertificateBatchesPage() {
   const startTour = () => {
     const driverObj = driver({
       showProgress: true,
-      nextBtnText: 'Tiếp theo',
-      prevBtnText: 'Quay lại',
-      doneBtnText: 'Hoàn tất',
+      nextBtnText: t('tour.next'),
+      prevBtnText: t('tour.prev'),
+      doneBtnText: t('tour.done'),
       steps: [
         { 
           element: '#btn-create-batch', 
           popover: { 
-            title: 'Bước 1: Tạo đợt cấp', 
-            description: 'Nhấn vào đây khi bạn muốn bắt đầu tạo một đợt cấp chứng chỉ mới hàng loạt từ file dữ liệu.', 
+            title: t('tour.batchesCreateTitle'), 
+            description: t('tour.batchesCreateDesc'), 
             side: "left", 
             align: 'start' 
           } 

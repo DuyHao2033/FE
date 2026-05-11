@@ -77,12 +77,15 @@ export default function BatchIssuePage() {
     if (step === 'select-template') {
       const driverStep1 = driver({
         popoverClass: isDark ? 'driverjs-theme-dark' : '',
+        nextBtnText: t('tour.next'),
+        prevBtnText: t('tour.prev'),
+        doneBtnText: t('tour.done'),
         steps: [
           {
             element: '#tour-batch-template-0',
             popover: {
-              title: 'Bước 1: Chọn mẫu chứng chỉ',
-              description: 'Chọn mẫu thiết kế đại diện mà bạn muốn áp dụng cho toàn bộ danh sách trong lô này.',
+              title: t('tour.batchTemplateTitle', { defaultValue: 'Choose Batch Template' }),
+              description: t('tour.batchTemplateDesc', { defaultValue: 'Select the template that will be applied to the whole batch.' }),
               side: 'top',
             },
           },
@@ -92,32 +95,32 @@ export default function BatchIssuePage() {
     } else {
       const driverStepConfig = driver({
         showProgress: true,
-        nextBtnText: 'Tiếp theo',
-        prevBtnText: 'Quay lại',
-        doneBtnText: 'Hoàn tất',
+        nextBtnText: t('tour.next'),
+        prevBtnText: t('tour.prev'),
+        doneBtnText: t('tour.done'),
         popoverClass: isDark ? 'driverjs-theme-dark' : '',
         steps: [
           {
             element: '#tour-batch-excel',
             popover: {
-              title: 'Tải file mẫu',
-              description: 'Hệ thống sẽ tạo file Excel chứa các cột tương ứng với mẫu bạn đã chọn. Hãy tải về và điền thông tin học viên vào đó.',
+              title: t('tour.batchExcelTitle', { defaultValue: 'Download the batch Excel template' }),
+              description: t('tour.batchExcelDesc', { defaultValue: 'Download an Excel template containing the required certificate data columns.' }),
               side: 'right',
             },
           },
           {
             element: '#tour-batch-upload',
             popover: {
-              title: 'Tải lên dữ liệu',
-              description: 'Kéo thả file Excel đã điền thông tin vào đây để hệ thống kiểm tra.',
+              title: t('tour.batchUploadTitle', { defaultValue: 'Upload completed batch Excel' }),
+              description: t('tour.batchUploadDesc', { defaultValue: 'Upload your completed Excel file so the system can validate and issue certificates.' }),
               side: 'top',
             },
           },
           {
             element: '#tour-batch-submit',
             popover: {
-              title: 'Bắt đầu cấp phát',
-              description: 'Nhấn nút này để hệ thống tiến hành tạo chứng chỉ hàng loạt. Quá trình này sẽ chạy ngầm.',
+              title: t('tour.batchSubmitTitle', { defaultValue: 'Submit batch issuance' }),
+              description: t('tour.batchSubmitDesc', { defaultValue: 'Submit the batch to issue certificates for all rows in the uploaded Excel file.' }),
               side: 'top',
             },
           },
@@ -125,7 +128,7 @@ export default function BatchIssuePage() {
       });
       driverStepConfig.drive();
     }
-  }, [step]);
+  }, [step, t]);
 
   const handleDownloadTemplate = async () => {
     if (!selectedTemplate) return;

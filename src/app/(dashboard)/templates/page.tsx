@@ -78,55 +78,55 @@ const handleStartTour = useCallback(() => {
   
   const d = driver({
     showProgress: true,
-    nextBtnText: 'Tiếp theo',
-    prevBtnText: 'Quay lại',
-    doneBtnText: 'Đã hiểu',
+    nextBtnText: t('tour.next'),
+    prevBtnText: t('tour.prev'),
+    doneBtnText: t('tour.done'),
     popoverClass: isDark ? 'driverjs-theme-dark' : '',
     steps: [
       {
         element: '#tour-search',
         popover: {
-          title: 'Tìm kiếm mẫu',
-          description: 'Bạn có thể tìm nhanh các mẫu chứng chỉ theo tên hoặc danh mục tại đây.',
+          title: t('tour.templatesSearchTitle'),
+          description: t('tour.templatesSearchDesc'),
           side: "bottom"
         }
       },
       {
         element: '#tour-create-btn',
         popover: {
-          title: 'Tạo mẫu mới',
-          description: 'Bắt đầu thiết kế một mẫu chứng chỉ hoàn toàn mới từ đầu.',
+          title: t('tour.templatesCreateTitle'),
+          description: t('tour.templatesCreateDesc'),
           side: "left"
         }
       },
       {
         element: '#tour-template-card',
         popover: {
-          title: 'Quản lý mẫu',
-          description: 'Mỗi thẻ đại diện cho một mẫu. bạn có thể xem trước trạng thái (Hoạt động/Nháp) tại đây.',
+          title: t('tour.templatesCardTitle'),
+          description: t('tour.templatesCardDesc'),
           side: "top"
         }
       },
       {
         element: '#tour-edit-btn',
         popover: {
-          title: 'Chỉnh sửa thiết kế',
-          description: 'Nhấn vào đây để vào giao diện Builder, nơi bạn có thể kéo thả và thay đổi nội dung chứng chỉ.',
+          title: t('tour.templatesEditTitle'),
+          description: t('tour.templatesEditDesc'),
           side: "bottom"
         }
       },
       {
         element: '#tour-more-options',
         popover: {
-          title: 'Thêm thao tác',
-          description: 'Tại đây bạn có thể Nhân bản (Duplicate) mẫu để tiết kiệm thời gian hoặc Kích hoạt/Hủy kích hoạt mẫu.',
+          title: t('tour.templatesMoreOptionsTitle'),
+          description: t('tour.templatesMoreOptionsDesc'),
           side: "left"
         }
       }
     ]
   });
   d.drive();
-}, []);
+}, [t]);
   const handleDuplicate = async (tmpl: Template) => {
     try {
       setIsSubmitting(true);

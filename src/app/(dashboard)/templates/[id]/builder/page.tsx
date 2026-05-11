@@ -38,47 +38,47 @@ export default function TemplateBuilderPage() {
     
     const d = driver({
       showProgress: true,
-      nextBtnText: 'Tiếp',
-      prevBtnText: 'Trước',
-      doneBtnText: 'Đã hiểu',
+      nextBtnText: t('tour.next'),
+      prevBtnText: t('tour.prev'),
+      doneBtnText: t('tour.done'),
       popoverClass: isDark ? 'driverjs-theme-dark' : '',
       steps: [
         {
           element: '#builder-container',
           popover: {
-            title: 'Chế độ chỉnh sửa',
-            description: 'Bạn đang chỉnh sửa mẫu chứng chỉ hiện có. Mọi thay đổi sẽ được cập nhật trực tiếp.',
+            title: t('tour.builderEditModeTitle'),
+            description: t('tour.builderEditModeDesc'),
             side: "top"
           }
         },
         {
           element: '#builder-toolbar',
           popover: {
-            title: 'Thanh công cụ',
-            description: 'Sử dụng các công cụ này để thêm nội dung mới hoặc các trường dữ liệu động.',
+            title: t('tour.builderToolbarTitle'),
+            description: t('tour.builderToolbarDesc'),
             side: "right"
           }
         },
         {
           element: '#builder-settings',
           popover: {
-            title: 'Cấu hình mẫu',
-            description: 'Thay đổi thông tin cơ bản hoặc khổ giấy của mẫu này.',
+            title: t('tour.builderSettingsTitle'),
+            description: t('tour.builderSettingsDesc'),
             side: "left"
           }
         },
         {
           element: '#builder-save-btn',
           popover: {
-            title: 'Cập nhật thay đổi',
-            description: 'Nhấn nút này để lưu lại phiên bản mới của mẫu chứng chỉ.',
+            title: t('tour.builderSaveTitle'),
+            description: t('tour.builderSaveDesc'),
             side: "bottom"
           }
         }
       ]
     });
     d.drive();
-  }, []);
+  }, [t]);
 
   const handleSave = async (layout: any, metadata: any, bgFile: File | null) => {
     try {

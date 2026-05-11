@@ -52,51 +52,60 @@ export default function IssueSinglePage() {
     const isDark = theme === 'dark';
     
     if (step === 'select-template') {
-      // Tour Bước 1: Chọn mẫu
       const driverStep1 = driver({
         popoverClass: isDark ? 'driverjs-theme-dark' : '',
+        nextBtnText: t('tour.next'),
+        prevBtnText: t('tour.prev'),
+        doneBtnText: t('tour.done'),
         steps: [
+          {
+            element: '#tour-search',
+            popover: {
+              title: t('tour.searchTitle'),
+              description: t('tour.searchDesc'),
+              side: 'bottom'
+            }
+          },
           { 
             element: '#tour-first-template', 
             popover: { 
-              title: 'Bước 1: Chọn mẫu', 
-              description: 'Chọn mẫu thiết kế bạn muốn sử dụng để cấp chứng chỉ.', 
-              side: "top" 
+              title: t('tour.selectTitle'), 
+              description: t('tour.selectDesc'), 
+              side: 'top' 
             } 
           }
         ]
       });
       driverStep1.drive();
     } else {
-      // Tour Bước 2 & 3: Nhập liệu và Cấp phát (Tại trang Chi tiết)
       const driverStepDetails = driver({
         showProgress: true,
-        nextBtnText: 'Tiếp theo',
-        prevBtnText: 'Quay lại',
-        doneBtnText: 'Hoàn tất',
+        nextBtnText: t('tour.next'),
+        prevBtnText: t('tour.prev'),
+        doneBtnText: t('tour.done'),
         popoverClass: isDark ? 'driverjs-theme-dark' : '',
         steps: [
           { 
-            element: '#tour-step-info', // Trỏ vào ô nhập liệu (Quyết định/Số vào sổ)
+            element: '#tour-step-info',
             popover: { 
-              title: 'Bước 2: Nhập liệu', 
-              description: 'Vui lòng chọn Quyết định khen thưởng và điền Số vào sổ tại đây.', 
-              side: "right" 
+              title: t('tour.decisionTitle'), 
+              description: t('tour.decisionDesc'), 
+              side: 'right' 
             } 
           },
           { 
-            element: '#tour-step-issue-button', // Trỏ vào nút Cấp chứng chỉ lẻ
+            element: '#builder-save-btn', 
             popover: { 
-              title: 'Bước 3: Cấp chứng chỉ', 
-              description: 'Sau khi kiểm tra thông tin chính xác, nhấn nút này để thực hiện cấp chứng chỉ.', 
-              side: "top" 
+              title: t('tour.submitTitle'), 
+              description: t('tour.submitDesc'), 
+              side: 'top' 
             } 
           }
         ]
       });
       driverStepDetails.drive();
     }
-  }, [theme, step]);
+  }, [theme, step, t]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -138,13 +147,14 @@ export default function IssueSinglePage() {
       await api.post('/certificates', {
         template_id: selectedTemplate.id,
         recipient_name: recipientName,
+        title: selectedTemplate.name,
         decision_id: selectedDecisionId || undefined,
         registry_number: registryNumber || undefined,
         custom_data: variableData
       });
       router.push('/certificates');
-    } catch (error) {
-      console.error("Issue error", error);
+    } catch (error: any) {
+      console.error("Issue error:", error?.response?.data || error?.message || error);
     } finally {
       setIsSubmitting(false);
     }
@@ -196,7 +206,7 @@ export default function IssueSinglePage() {
 
       {step === 'select-template' ? (
         <div className="flex-1 space-y-6">
-          <div className="relative max-w-md">
+          <div id="tour-search" className="relative max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"

@@ -50,21 +50,21 @@ export default function CertificatesPage() {
       allowClose: true,
       popoverClass: 'driverjs-theme',
       overlayColor: isDark ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.7)',
-      nextBtnText: t('tour.next') || 'Tiếp theo',
-      prevBtnText: t('tour.prev') || 'Trước đó',
-      doneBtnText: t('tour.done') || 'Hoàn tất',
+      nextBtnText: t('tour.next'),
+      prevBtnText: t('tour.prev'),
+      doneBtnText: t('tour.done'),
       steps: [
         { 
           element: '#tour-search', 
-          popover: { title: 'Tìm kiếm', description: 'Nhập tên hoặc mã số hiệu để tìm nhanh chứng chỉ.', side: "bottom" } 
+          popover: { title: t('tour.certificatesSearchTitle'), description: t('tour.certificatesSearchDesc'), side: "bottom" } 
         },
         { 
           element: '#tour-pdf-btn', 
-          popover: { title: 'Tải file PDF', description: 'Nhấn vào đây để xem và tải bản in của chứng chỉ.', side: "left" } 
+          popover: { title: t('tour.certificatesPdfTitle'), description: t('tour.certificatesPdfDesc'), side: "left" } 
         },
         { 
           element: '#tour-revoke-btn', 
-          popover: { title: 'Thu hồi bằng', description: 'Trong trường hợp sai thông tin, bạn có thể thực hiện thu hồi tại đây.', side: "left" } 
+          popover: { title: t('tour.certificatesRevokeTitle'), description: t('tour.certificatesRevokeDesc'), side: "left" } 
         },
       ]
     });
